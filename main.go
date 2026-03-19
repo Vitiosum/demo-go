@@ -82,6 +82,8 @@ func indexPage(w http.ResponseWriter, r *http.Request) {
     .footer-link.cc:hover { background: rgba(34,197,94,0.12); }
     .footer-link.li { color: #93c5fd; border-color: rgba(96,165,250,0.2); background: rgba(96,165,250,0.06); }
     .footer-link.li:hover { background: rgba(96,165,250,0.12); }
+    .footer-link.cert { color: #fbbf24; border-color: rgba(251,191,36,0.25); background: rgba(251,191,36,0.07); }
+    .footer-link.cert:hover { background: rgba(251,191,36,0.14); }
     .footer-copy { text-align: center; color: #334155; font-size: 11px; }
   </style>
 </head>
@@ -140,6 +142,10 @@ func indexPage(w http.ResponseWriter, r *http.Request) {
       <a class="footer-link" href="https://go.dev/doc/" target="_blank" rel="noopener noreferrer">
         <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
         Go Docs
+      </a>
+      <a class="footer-link cert" href="https://academy.clever.cloud/" target="_blank" rel="noopener noreferrer">
+        <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+        Certification Clever Cloud
       </a>
     </div>
     <p class="footer-copy">Open source demo &middot; Deployed on Clever Cloud</p>
