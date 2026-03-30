@@ -251,7 +251,7 @@ footer{border-top:1px solid rgba(255,255,255,0.06);padding:24px 0 12px;margin-to
         <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg>
         LinkedIn
       </a>
-      <a class="fl" href="https://developers.clever-cloud.com/doc/applications/go/" target="_blank" rel="noopener noreferrer">
+      <a class="fl" href="https://www.clever.cloud/developers/doc/deploy/application/golang/go/" target="_blank" rel="noopener noreferrer">
         <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
         Go on CC
       </a>
