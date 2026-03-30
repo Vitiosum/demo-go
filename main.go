@@ -42,7 +42,10 @@ func main() {
 	http.HandleFunc("/health", healthCheck)
 	http.HandleFunc("/stats", statsPage)
 	fmt.Printf("Go runtime dashboard on :%s\n", port)
-	http.ListenAndServe("0.0.0.0:"+port, nil)
+	if err := http.ListenAndServe("0.0.0.0:"+port, nil); err != nil {
+		fmt.Fprintf(os.Stderr, "server error: %v\n", err)
+		os.Exit(1)
+	}
 }
 
 func statsPage(w http.ResponseWriter, r *http.Request) {
