@@ -1,60 +1,80 @@
-# Deploy Go Applications on Clever Cloud
+# Go Runtime Dashboard — Live metrics on Clever Cloud
 
-This repository is a code example written in Go. You can clone it and deploy it on Clever Cloud following these steps.
+> Real-time Go runtime metrics (goroutines, heap, GC, uptime, requests) served from a single-file Go app deployed on Clever Cloud.
 
-See an app demo [here](https://gogogo.cleverapps.io).
+---
 
-_NB: alternatively, this can be a reference for deploying your own code on a remote server._
-You'll need a [Clever Cloud](https://clever-cloud.com) account to deploy on the platform.
+## Deploy on Clever Cloud
 
-## Deploy this repository on Clever Cloud
+1. Fork this repository
+2. In the Clever Cloud console, create a new **Go** application — connect your forked repo
+3. No add-on needed
+4. No environment variables to set manually — Clever Cloud injects `PORT` and `INSTANCE_NUMBER` automatically
+5. Push → Clever Cloud builds and deploys automatically
 
-This few steps will guide you into deploying this app within minutes. 
+**Configuration file:** `clevercloud/go.json`
 
-### Create a new app from this repository
+```json
+{ "deploy": { "appIsToBeBuilt": true } }
+```
 
-1. Fork  or clone this repository
-2. On Clever Cloud, go to **create > an app** choose your forked repo from GitHub or **new app** if you deploy using Git.
-3. Choose **GO** and follow the next steps. You don't need any addon.
+---
 
-### Inject the environment variables
+## Stack
 
-Environment variables are injected dynamically on Clever Cloud. To deploy a Go app, the runtime will need a few instructions to know how to deploy you app.
+| Layer      | Technology                              |
+|------------|-----------------------------------------|
+| Language   | Go 1.24                                 |
+| Deps       | None (stdlib only)                      |
+| Frontend   | HTML/CSS/JS embedded in `main.go`       |
+| Fonts      | Inter, Newsreader, DM Mono (Google CDN) |
+| Design     | Aura Full (dark, blue accent)           |
 
-At the **Environment variables** step, add the variable name `CC_GO_BUILD_TOOL` with value `gobuild`.
+---
 
-### ... and just... deploy!
+## Features
 
-Wait until the deployment is completed if you are deploying from GitHub, or copy paste the command from the Console to push the code if you are suning Git.  
+- Live dashboard updated every 2 seconds via JS polling
+- Metrics: goroutines, heap (MB), uptime, GC cycles, request count, Go version
+- Flash animation on metric change
+- Sticky glass-blur nav, iridescent orbs background
+- Marquee strip, animated shiny CTA button
+- `/stats` JSON endpoint
+- `/health` endpoint (200 OK)
 
-## A few notes on Go deployment on Clever Cloud
+---
 
-This repository has already been configured for deployment. Here's how, so you can fix issues on your own code.
+## Local Development
 
-### Port and network listening
+### Prerequisites
 
-Notice this part of the code in `main.go`:
+- Go 1.24+
 
-```go
+### Run
 
-func main() {
- http.HandleFunc("/", indexPage)
- //Clever Cloud applications must listen on port 8080
- http.ListenAndServe("0.0.0.0:8080", nil)
+```bash
+git clone https://github.com/Vitiosum/demo-go
+cd demo-go
+go run main.go
+# → http://localhost:8080
+```
 
-}
- ```
+---
 
-This is how you configure your app to listen to the wild network `0.0.0.0`, not only `localhost` or `127.0.0.1`.
+## Environment Variables
 
-### Paths and commands
+| Variable          | Required | Description                                      |
+|-------------------|----------|--------------------------------------------------|
+| `PORT`            | auto     | Injected by Clever Cloud (default: 8080)         |
+| `INSTANCE_NUMBER` | auto     | Injected by Clever Cloud for multi-instance setups |
 
-#### Go build
+No variables need to be set manually.
 
-For projects that don't support `go modules`, `go build` will be used. To use it on Clever Cloud, you use `gobuild`.  We will then deploy your project in a classic `GOPATH` hierarchy using go build. You can use other Go commands using the `CC_GO_BUILD_TOOL` variable environment.
+---
 
-#### Main file
+## Deployment Notes
 
-By default, Clever Cloud will look for a `main.go` file containing the code to run. If you want to name it differentely, you'll need to set the `CC_GO_PKG` environment variable with the main file of your application as value.
-
-You can find more instructions on Go application configuration in [our Go documentation](https://www.clever-cloud.com/doc/deploy/application/golang/go/#configure-your-go-application).
+- All HTML, CSS, and JS live inside the `indexHTML` constant in `main.go` — no static file serving
+- The app listens on `0.0.0.0:$PORT` as required by Clever Cloud
+- `INSTANCE_NUMBER` is injected automatically and displayed in the info panel
+- Build time is fast — no external dependencies
