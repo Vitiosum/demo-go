@@ -96,91 +96,116 @@ const indexHTML = `<!DOCTYPE html>
 <title>Go · Clever Cloud</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400&family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,600;0,700;1,300&family=Newsreader:ital,wght@1,300&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{font-family:'Outfit',sans-serif;background:#07080C;color:#E6E8F0;min-height:100vh}
+html{font-family:'Inter',sans-serif;background:hsl(0,0%,9%);color:hsl(0,0%,98%);min-height:100vh}
 body{min-height:100vh;overflow-x:hidden;position:relative}
 
-.orb{position:fixed;border-radius:50%;filter:blur(80px);opacity:0.18;pointer-events:none;animation:orb-drift 12s ease-in-out infinite alternate}
-.orb-1{width:600px;height:600px;background:#FF5A1F;top:-200px;left:-200px;animation-delay:0s}
-.orb-2{width:500px;height:500px;background:#22c55e;bottom:-150px;right:-150px;animation-delay:-6s}
-@keyframes orb-drift{0%{transform:translate(0,0) scale(1)}100%{transform:translate(40px,30px) scale(1.08)}}
+/* Orbs */
+.orb{position:fixed;border-radius:50%;pointer-events:none;filter:blur(80px);opacity:0.2}
+.orb-1{width:500px;height:500px;background:radial-gradient(circle,#3b82f6 0%,transparent 70%);top:-150px;right:-100px}
+.orb-2{width:350px;height:350px;background:radial-gradient(circle,#8b5cf6 0%,transparent 70%);bottom:-100px;left:-80px}
+.orb-3{width:250px;height:250px;background:radial-gradient(circle,#06b6d4 0%,transparent 70%);top:45%;left:40%}
 
-.container{max-width:900px;margin:0 auto;padding:32px 20px 0;position:relative;z-index:1}
+/* Nav glass blur */
+.nav{display:flex;align-items:center;justify-content:space-between;padding:12px 28px;background:rgba(23,23,23,0.75);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid hsl(0,0%,20%);position:sticky;top:0;z-index:10}
+.nav-logo{font-size:14px;font-weight:700;color:hsl(0,0%,98%);letter-spacing:-0.02em}
+.nav-logo span{color:#3b82f6}
+.nav-pill{display:flex;align-items:center;gap:6px;background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.2);border-radius:99px;padding:5px 12px;font-size:10px;color:#60a5fa;font-weight:600;letter-spacing:0.06em;text-transform:uppercase}
+.nav-dot{width:5px;height:5px;background:#3b82f6;border-radius:50%;animation:pulse 1.5s ease-in-out infinite}
 
+/* Container */
+.container{max-width:900px;margin:0 auto;padding:40px 20px 0;position:relative;z-index:1}
+
+/* Hero */
 .hero{text-align:center;margin-bottom:40px}
-.live-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(255,90,31,0.1);border:1px solid rgba(255,90,31,0.25);border-radius:99px;color:#FF5A1F;font-size:12px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;padding:6px 16px;margin-bottom:20px}
-.live-dot{width:7px;height:7px;background:#FF5A1F;border-radius:50%;animation:pulse 1.5s ease-in-out infinite}
+.live-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);border-radius:99px;color:#60a5fa;font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;padding:5px 16px;margin-bottom:18px}
+.live-dot{width:6px;height:6px;background:#3b82f6;border-radius:50%;animation:pulse 1.5s ease-in-out infinite}
 @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(0.8)}}
+h1{font-size:clamp(2.5rem,7vw,4rem);font-weight:700;color:hsl(0,0%,98%);letter-spacing:-0.05em;line-height:1.05;margin-bottom:6px}
+.hero-serif{display:block;font-family:'Newsreader',serif;font-style:italic;font-weight:300;font-size:clamp(1.4rem,4vw,2.2rem);color:hsl(0,0%,65%);letter-spacing:-0.02em;margin-bottom:12px}
+.hero-sub{color:hsl(0,0%,55%);font-size:14px;letter-spacing:-0.01em}
 
-h1{font-family:'Bebas Neue',sans-serif;font-size:clamp(3rem,8vw,5.5rem);font-weight:400;line-height:1.05;margin-bottom:12px;letter-spacing:0.02em}
-.go-word{color:#FF5A1F;text-shadow:0 0 40px rgba(255,90,31,0.5)}
-.cc-word{color:#22c55e;text-shadow:0 0 40px rgba(34,197,94,0.4)}
-.subtitle{color:#4E5468;font-size:15px;font-family:'Outfit',sans-serif}
-
-.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:28px}
+/* Metric cards */
+.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px}
 @media(max-width:620px){.metrics{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:380px){.metrics{grid-template-columns:1fr}}
-
-.card{background:#0C0E13;border:1px solid #1A1D26;border-radius:16px;padding:20px 18px;position:relative;overflow:hidden;transition:border-color 0.3s}
-.card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:16px 16px 0 0;background:var(--accent)}
+.card{background:hsl(0,0%,11%);border:1px solid hsl(0,0%,20%);border-radius:12px;padding:18px 16px;position:relative;overflow:hidden;transition:border-color 0.3s}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:12px 12px 0 0;background:var(--accent)}
 .card::after{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:radial-gradient(ellipse at top,var(--glow) 0%,transparent 70%);opacity:0;transition:opacity 0.3s;pointer-events:none}
 .card.flash::after{opacity:1;animation:flash-fade 0.5s ease-out forwards}
 @keyframes flash-fade{0%{opacity:0.4}100%{opacity:0}}
-
-.card-goroutines{--accent:linear-gradient(90deg,#FF5A1F,#ff8c5a);--glow:rgba(255,90,31,0.12)}
-.card-heap{--accent:linear-gradient(90deg,#a855f7,#8b5cf6);--glow:rgba(168,85,247,0.10)}
+.card-goroutines{--accent:linear-gradient(90deg,#3b82f6,#2563eb);--glow:rgba(59,130,246,0.12)}
+.card-heap{--accent:linear-gradient(90deg,#8b5cf6,#7c3aed);--glow:rgba(139,92,246,0.10)}
 .card-uptime{--accent:linear-gradient(90deg,#22c55e,#16a34a);--glow:rgba(34,197,94,0.10)}
 .card-gc{--accent:linear-gradient(90deg,#06b6d4,#0891b2);--glow:rgba(6,182,212,0.10)}
-.card-requests{--accent:linear-gradient(90deg,#f59e0b,#d97706);--glow:rgba(245,158,11,0.10)}
-.card-version{--accent:linear-gradient(90deg,#475569,#334155);--glow:rgba(71,85,105,0.08)}
+.card-requests{--accent:linear-gradient(90deg,#fbbf24,#f59e0b);--glow:rgba(245,158,11,0.10)}
+.card-version{--accent:linear-gradient(90deg,hsl(0,0%,40%),hsl(0,0%,28%));--glow:rgba(100,116,139,0.08)}
+.card-label{font-size:9px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:hsl(0,0%,55%);margin-bottom:10px}
+.card-value{font-family:'DM Mono',monospace;font-size:2rem;font-weight:300;color:hsl(0,0%,98%);line-height:1;margin-bottom:4px;font-variant-numeric:tabular-nums;letter-spacing:-0.02em}
+.card-unit{font-size:10px;color:hsl(0,0%,40%)}
 
-.card-label{font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:#4E5468;margin-bottom:12px}
-.card-value{font-family:'DM Mono',monospace;font-size:2.2rem;font-weight:300;color:#E6E8F0;line-height:1;margin-bottom:4px;font-variant-numeric:tabular-nums}
-.card-unit{font-size:11px;color:#4E5468}
+/* Status bar */
+.status-bar{display:flex;align-items:center;justify-content:center;gap:6px;font-size:11px;color:hsl(0,0%,45%);margin-bottom:24px;letter-spacing:0.01em}
+.status-dot{width:5px;height:5px;background:#22c55e;border-radius:50%;animation:pulse 2s ease-in-out infinite}
 
-.status-bar{display:flex;align-items:center;justify-content:center;gap:6px;font-size:12px;color:#4E5468;margin-bottom:28px}
-.status-dot{width:6px;height:6px;background:#22c55e;border-radius:50%;animation:pulse 2s ease-in-out infinite}
-
-.info-card{background:#0C0E13;border:1px solid #1A1D26;border-radius:16px;padding:20px 24px;margin-bottom:28px}
-.info-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+/* Info card */
+.info-card{background:hsl(0,0%,11%);border:1px solid hsl(0,0%,20%);border-radius:12px;padding:16px 20px;margin-bottom:24px}
+.info-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
 @media(max-width:500px){.info-grid{grid-template-columns:1fr 1fr}}
-.info-item{background:#07080C;border:1px solid #1A1D26;border-radius:10px;padding:12px}
-.info-label{font-size:9px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:#4E5468;margin-bottom:4px}
-.info-value{font-family:'DM Mono',monospace;font-size:13px;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.info-item{background:hsl(0,0%,9%);border:1px solid hsl(0,0%,20%);border-radius:8px;padding:10px}
+.info-label{font-size:8px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:hsl(0,0%,40%);margin-bottom:4px}
+.info-value{font-family:'DM Mono',monospace;font-size:12px;color:hsl(0,0%,60%);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
-.cert-banner{display:flex;align-items:center;gap:16px;background:rgba(251,191,36,0.07);border:1px solid rgba(251,191,36,0.25);border-radius:16px;padding:20px 24px;margin-bottom:14px}
-.cert-icon{font-size:28px;flex-shrink:0}
-.cert-content{flex:1}
-.cert-title{font-size:15px;font-weight:600;color:#fbbf24;margin-bottom:4px}
-.cert-sub{font-size:13px;color:#78716c;line-height:1.5}
-.cert-btn{display:inline-flex;align-items:center;gap:6px;background:#fbbf24;border-radius:10px;color:#1c1917;font-size:13px;font-weight:700;padding:10px 18px;text-decoration:none;transition:all 0.2s;white-space:nowrap;flex-shrink:0}
-.cert-btn:hover{background:#f59e0b;transform:translateY(-1px);box-shadow:0 4px 16px rgba(251,191,36,0.3)}
-@media(max-width:540px){.cert-banner{flex-direction:column;text-align:center}}
+/* Marquee */
+.marquee-wrap{overflow:hidden;position:relative;margin-bottom:24px}
+.marquee-wrap::before,.marquee-wrap::after{content:'';position:absolute;top:0;bottom:0;width:80px;z-index:2;pointer-events:none}
+.marquee-wrap::before{left:0;background:linear-gradient(90deg,hsl(0,0%,9%) 0%,transparent 100%)}
+.marquee-wrap::after{right:0;background:linear-gradient(-90deg,hsl(0,0%,9%) 0%,transparent 100%)}
+.marquee-track{display:flex;gap:10px;width:max-content;animation:marquee 30s linear infinite}
+@keyframes marquee{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+.marquee-item{flex-shrink:0;display:flex;align-items:center;gap:6px;background:hsl(0,0%,11%);border:1px solid hsl(0,0%,20%);border-radius:6px;padding:6px 14px;font-size:11px;color:hsl(0,0%,50%);font-weight:500;white-space:nowrap}
+.marquee-dot{width:4px;height:4px;border-radius:50%;background:hsl(0,0%,35%);flex-shrink:0}
 
-footer{border-top:1px solid #1A1D26;padding:24px 0 12px;margin-top:0}
-.footer-links{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:14px}
-.fl{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.03);border:1px solid #1A1D26;border-radius:8px;color:#4E5468;font-size:12px;padding:6px 12px;text-decoration:none;transition:all 0.2s}
-.fl:hover{background:rgba(255,255,255,0.06);color:#94a3b8;border-color:#2a2f3d}
-.fl-cc{color:#86efac!important;border-color:rgba(34,197,94,0.2)!important;background:rgba(34,197,94,0.06)!important}
-.fl-cc:hover{background:rgba(34,197,94,0.12)!important}
-.fl-li{color:#93c5fd!important;border-color:rgba(96,165,250,0.2)!important;background:rgba(96,165,250,0.06)!important}
-.fl-li:hover{background:rgba(96,165,250,0.12)!important}
-.fl-cert{color:#fbbf24!important;border-color:rgba(251,191,36,0.25)!important;background:rgba(251,191,36,0.07)!important}
-.fl-cert:hover{background:rgba(251,191,36,0.14)!important}
-.footer-copy{text-align:center;color:#4E5468;font-size:11px;padding-bottom:8px}
+/* Shiny CTA */
+.shiny-wrap{display:flex;justify-content:center;margin-bottom:24px}
+.shiny-cta{position:relative;display:inline-flex;align-items:center;gap:10px;padding:14px 32px;border-radius:99px;font-family:'Inter',sans-serif;font-size:14px;font-weight:600;color:hsl(0,0%,98%);letter-spacing:-0.01em;background:hsl(0,0%,9%);border:none;cursor:pointer;text-decoration:none;outline:none}
+.shiny-cta::before{content:'';position:absolute;inset:-1.5px;border-radius:99px;background:conic-gradient(from 0deg,#3b82f6,#8b5cf6,#06b6d4,#fbbf24,#3b82f6);z-index:-1;animation:border-spin 4s linear infinite}
+.shiny-cta::after{content:'';position:absolute;inset:1px;border-radius:99px;background:hsl(0,0%,9%);background-image:radial-gradient(circle,rgba(255,255,255,0.07) 1px,transparent 1px);background-size:16px 16px;z-index:-1}
+@keyframes border-spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+.shiny-icon{font-size:18px}
+
+/* Footer */
+footer{border-top:1px solid hsl(0,0%,18%);padding:20px 0 12px;margin-top:0}
+.footer-links{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:12px}
+.fl{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.03);border:1px solid hsl(0,0%,18%);border-radius:8px;color:hsl(0,0%,40%);font-size:11px;padding:6px 12px;text-decoration:none;transition:all 0.2s}
+.fl:hover{background:rgba(255,255,255,0.06);color:hsl(0,0%,65%);border-color:hsl(0,0%,25%)}
+.fl-cc{color:#86efac!important;border-color:rgba(34,197,94,0.2)!important;background:rgba(34,197,94,0.05)!important}
+.fl-cc:hover{background:rgba(34,197,94,0.1)!important}
+.fl-li{color:#93c5fd!important;border-color:rgba(96,165,250,0.2)!important;background:rgba(96,165,250,0.05)!important}
+.fl-li:hover{background:rgba(96,165,250,0.1)!important}
+.fl-cert{color:#fbbf24!important;border-color:rgba(251,191,36,0.25)!important;background:rgba(251,191,36,0.06)!important}
+.fl-cert:hover{background:rgba(251,191,36,0.12)!important}
+.footer-copy{text-align:center;color:hsl(0,0%,30%);font-size:11px;padding-bottom:8px}
 </style>
 </head>
 <body>
+
 <div class="orb orb-1"></div>
 <div class="orb orb-2"></div>
+<div class="orb orb-3"></div>
+
+<nav class="nav">
+  <div class="nav-logo">Go<span>.</span>Runtime</div>
+  <div class="nav-pill"><div class="nav-dot"></div>LIVE</div>
+</nav>
 
 <div class="container">
   <div class="hero">
     <div class="live-badge"><span class="live-dot"></span>Live runtime</div>
-    <h1><span class="go-word">Go</span> + <span class="cc-word">Clever Cloud</span></h1>
-    <p class="subtitle">Real-time runtime metrics — refreshed every 2 seconds</p>
+    <h1>Go Runtime<span class="hero-serif">dashboard</span></h1>
+    <p class="hero-sub">Real-time metrics — refreshed every 2 seconds</p>
   </div>
 
   <div class="metrics">
@@ -211,7 +236,7 @@ footer{border-top:1px solid #1A1D26;padding:24px 0 12px;margin-top:0}
     </div>
     <div class="card card-version" id="c-version">
       <div class="card-label">Go Version</div>
-      <div class="card-value" style="font-size:1.6rem" id="v-version">{{.GoVer}}</div>
+      <div class="card-value" style="font-size:1.4rem" id="v-version">{{.GoVer}}</div>
       <div class="card-unit">runtime</div>
     </div>
   </div>
@@ -238,13 +263,32 @@ footer{border-top:1px solid #1A1D26;padding:24px 0 12px;margin-top:0}
     </div>
   </div>
 
-  <div class="cert-banner">
-    <div class="cert-icon">🎓</div>
-    <div class="cert-content">
-      <div class="cert-title">Envie de maîtriser Clever Cloud ?</div>
-      <div class="cert-sub">Validez vos compétences avec la certification officielle — et devenez expert de la plateforme.</div>
+  <div class="marquee-wrap">
+    <div class="marquee-track">
+      <div class="marquee-item"><div class="marquee-dot"></div>Go 1.24</div>
+      <div class="marquee-item"><div class="marquee-dot"></div>Clever Cloud</div>
+      <div class="marquee-item"><div class="marquee-dot"></div>Goroutines</div>
+      <div class="marquee-item"><div class="marquee-dot"></div>Runtime Metrics</div>
+      <div class="marquee-item"><div class="marquee-dot"></div>GC Cycles</div>
+      <div class="marquee-item"><div class="marquee-dot"></div>stdlib only</div>
+      <div class="marquee-item"><div class="marquee-dot"></div>No dependencies</div>
+      <div class="marquee-item"><div class="marquee-dot"></div>Open source</div>
+      <div class="marquee-item"><div class="marquee-dot"></div>Go 1.24</div>
+      <div class="marquee-item"><div class="marquee-dot"></div>Clever Cloud</div>
+      <div class="marquee-item"><div class="marquee-dot"></div>Goroutines</div>
+      <div class="marquee-item"><div class="marquee-dot"></div>Runtime Metrics</div>
+      <div class="marquee-item"><div class="marquee-dot"></div>GC Cycles</div>
+      <div class="marquee-item"><div class="marquee-dot"></div>stdlib only</div>
+      <div class="marquee-item"><div class="marquee-dot"></div>No dependencies</div>
+      <div class="marquee-item"><div class="marquee-dot"></div>Open source</div>
     </div>
-    <a class="cert-btn" href="https://academy.clever.cloud/" target="_blank" rel="noopener noreferrer">Obtenir la certification →</a>
+  </div>
+
+  <div class="shiny-wrap">
+    <a class="shiny-cta" href="https://academy.clever.cloud/" target="_blank" rel="noopener noreferrer">
+      <span class="shiny-icon">🎓</span>
+      Obtenir la certification Clever Cloud →
+    </a>
   </div>
 
   <footer>
