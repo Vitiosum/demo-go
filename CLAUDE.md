@@ -55,6 +55,23 @@ Déployée sur **Clever Cloud** (runtime Go).
 
 ---
 
+## 🎨 Design system — Aura Full
+
+**Design :** Aura AI Automation (Inter + Newsreader + DM Mono)  
+**Couleurs :** fond `hsl(0,0%,9%)`, cartes `hsl(0,0%,11%)`, accent bleu `#3b82f6`, or `#fbbf24`  
+**Composants :**
+- Nav sticky glass blur (`backdrop-filter:blur(16px)`)
+- 3 orbs iridescents fixes (bleu `#3b82f6`, violet `#8b5cf6`, cyan `#06b6d4`)
+- Hero : Inter 700 letter-spacing `-0.05em` + Newsreader italic 300
+- 6 cartes métriques avec top accent 2px coloré + flash animation
+- Marquee défilant (`animation:marquee 30s linear infinite`)
+- Shiny CTA certification : border `conic-gradient` animé 4s
+- Footer liens colorés
+
+**Dernier redesign :** Aura Full — commit `da08dd5`
+
+---
+
 ## ☁️ Déploiement Clever Cloud
 
 - **Type d'app** : Go
