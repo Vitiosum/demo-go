@@ -48,27 +48,30 @@ Tu dois raisonner avec fermeté : ne propose pas plusieurs pistes floues si une 
 ## 🎯 Contexte du projet
 
 Dashboard de métriques runtime Go en temps réel.
-L'app expose ses propres métriques Go (goroutines, heap, GC, uptime, requests) via une interface HTML mise à jour toutes les 2 secondes par polling JavaScript.
-Conçue comme démo de déploiement sur **Clever Cloud**.
+L'app expose ses propres métriques Go (goroutines, heap, GC, uptime, requests) via une interface HTML mise à jour toutes les 2 secondes par polling JavaScript, et affiche ce que la plateforme injecte (panneau « Vu depuis Clever Cloud »).
+Conçue comme démo de déploiement sur **Clever Cloud**, avec la **certification Clever Cloud** (Academy) en position centrale.
 
 Déployée sur **Clever Cloud** (runtime Go).
 
 ---
 
-## 🎨 Design system — Aura Full
+## 🎨 Design system — Clever Brand Kit
 
-**Design :** Aura AI Automation (Inter + Newsreader + DM Mono)  
-**Couleurs :** fond `hsl(0,0%,9%)`, cartes `hsl(0,0%,11%)`, accent bleu `#3b82f6`, or `#fbbf24`  
-**Composants :**
-- Nav sticky glass blur (`backdrop-filter:blur(16px)`)
-- 3 orbs iridescents fixes (bleu `#3b82f6`, violet `#8b5cf6`, cyan `#06b6d4`)
-- Hero : Inter 700 letter-spacing `-0.05em` + Newsreader italic 300
-- 6 cartes métriques avec top accent 2px coloré + flash animation
-- Marquee défilant (`animation:marquee 30s linear infinite`)
-- Shiny CTA certification : border `conic-gradient` animé 4s
-- Footer liens colorés
+**Kit :** `static/cc-brand.css`, copie **à l'identique** du kit partagé (`docs/superpowers/brand-kit/cc-brand.css` du monorepo). Ne pas le modifier : les styles propres à la démo tiennent dans le `<style>` court de `static/index.html` (`.go-layout`, `.go-metrics`, `.go-live`).
+**Spec :** `docs/superpowers/specs/2026-09-06-clever-brand-design.md`
+**Typographie :** Plus Jakarta Sans (texte), JetBrains Mono (valeurs techniques) — Google Fonts, repli système.
+**Couleurs :** fond navy `#13172e`, surfaces `#1c2045`, texte `#f9f9fb`, dégradé Clever `#f57461 → #cb1c42 → #a51050`, vert `#11bea9` (ok), orange `#f57461` (live, flash).
+**Structure de page (ordre imposé par `reference.html`) :**
+1. `.cc-topbar` — logo Clever Cloud (SVG inline, `{{template "cc-logo"}}`), nom « Go Runtime », pill mono « Go {{.GoVer}} · stdlib », pill live/local, « Se certifier ↗ »
+2. `.cc-hero` — « Go, *sans dépendance, en production.* », lead, 4 facts
+3. `.cc-cert` — badge SVG inline, 2 parcours Academy, CTA « Obtenir ma certification »
+4. Contenu démo — 6 `.cc-card--accent` avec `.cc-stat` (`id` `v-*` lus par le JS) + `.cc-platform` « Vu depuis Clever Cloud »
+5. « Ce que Clever Cloud fait pour cette app » — 3 cartes
+6. `.cc-footer` — doc Go, variables d'environnement, Console, Academy (`is-cert`), GitHub
 
-**Dernier redesign :** Aura Full — commit `da08dd5`
+**Motion :** point live pulsant, `.cc-reveal` (fade-in échelonné), flash `.cc-stat--flash` 300 ms sur changement de valeur. Pas d'orbes, pas de marquee, pas de bordure conique.
+
+**Dernier redesign :** Clever Brand Kit — branche `redesign/clever-brand`
 
 ---
 
@@ -77,10 +80,11 @@ Déployée sur **Clever Cloud** (runtime Go).
 - **Type d'app** : Go
 - **Config** : `clevercloud/go.json` → `appIsToBeBuilt: true`
 - **Port** : `PORT` (env var Clever Cloud) ou `8080` par défaut
-- **Endpoints** : `GET /` (dashboard), `GET /health`, `GET /stats` (JSON)
+- **Endpoints** : `GET /` (dashboard), `GET /health`, `GET /stats` (JSON), `GET /cc-brand.css`
 
 ### Variables d'environnement
 Aucune variable spécifique requise. Clever Cloud injecte `PORT` et `INSTANCE_NUMBER` automatiquement.
+Le panneau plateforme lit aussi `CC_APP_NAME`, `APP_ID`, `INSTANCE_TYPE`, `CC_PRETTY_INSTANCE_NAME`, `CC_COMMIT_ID` (7 car.), `CC_DEPLOYMENT_ID` (16 car.) ; sans `APP_ID` il affiche « Local · hors Clever Cloud ».
 
 ---
 
@@ -88,9 +92,9 @@ Aucune variable spécifique requise. Clever Cloud injecte `PORT` et `INSTANCE_NU
 
 | Élément | Valeur |
 |---|---|
-| Go | 1.24 |
-| Dépendances | Aucune (stdlib uniquement) |
-| Frontend | HTML/CSS/JS embarqué dans `main.go` |
+| Go | 1.24 (`go.mod`) |
+| Dépendances | Aucune (stdlib + `embed`) |
+| Frontend | `static/index.html` (`html/template`) + `static/cc-brand.css`, embarqués dans le binaire |
 | Base de données | Aucune |
 
 ---
@@ -98,8 +102,12 @@ Aucune variable spécifique requise. Clever Cloud injecte `PORT` et `INSTANCE_NU
 ## 📁 Structure clé
 
 ```
-main.go       → app entière (serveur HTTP + template HTML embarqué)
-go.mod        → module Go
+main.go               → serveur HTTP, /stats, /health, /cc-brand.css, platformInfo() (variables CC_*)
+static/index.html     → template de la page (Clever Brand Kit) + JS de polling
+static/cc-brand.css   → kit CSS partagé (copie, ne pas modifier)
+clevercloud/go.json   → config de build Clever Cloud
+docs/superpowers/     → specs et plans
+go.mod                → module Go
 ```
 
 ---
@@ -108,10 +116,11 @@ go.mod        → module Go
 
 ```bash
 # Lancer en local
-go run main.go
+go run .
+PORT=8084 go run .
 
-# Builder
-go build -o app main.go
+# Vérifier / builder
+go vet ./... && go build -o app .
 ```
 
 ---
@@ -130,9 +139,11 @@ Clever Cloud redéploie automatiquement après chaque push.
 
 ## ⚠️ Points de vigilance
 
-- Tout le HTML est embarqué dans la constante `indexHTML` dans `main.go`
+- Le HTML vit dans `static/index.html`, embarqué par `//go:embed static` : toujours builder le **package** (`go run .`, `go build .`), pas un fichier isolé
 - L'app écoute sur `0.0.0.0:PORT` — ne pas hardcoder le port
 - `INSTANCE_NUMBER` est injecté par Clever Cloud pour distinguer les instances en cas de scaling
+- `static/cc-brand.css` est une copie du kit partagé : le remplacer entièrement lors d'une mise à jour du kit, ne pas l'éditer localement
+- Le template est un `html/template` : les valeurs sont échappées automatiquement, ne pas y injecter de HTML brut
 
 ---
 
@@ -141,5 +152,8 @@ Clever Cloud redéploie automatiquement après chaque push.
 | Symptôme | Cause probable | Correction |
 |---|---|---|
 | App ne démarre pas | Port non écouté sur 0.0.0.0 | Vérifier que `ListenAndServe` utilise `0.0.0.0:PORT` |
-| Lien doc cassé | URL Clever Cloud modifiée | Mettre à jour l'URL dans `indexHTML` |
-| Métriques figées | Erreur fetch `/stats` côté JS | Vérifier les logs runtime Clever Cloud |
+| `pattern static: no matching files` | Build hors du package | Utiliser `go run .` / `go build .` |
+| Page sans style | `/cc-brand.css` en 404 | Vérifier que `static/cc-brand.css` est présent et committé |
+| Lien doc cassé | URL Clever Cloud modifiée | Mettre à jour l'URL dans `static/index.html` |
+| Métriques figées | Erreur fetch `/stats` côté JS | Vérifier les logs runtime Clever Cloud ; la pill passe en « Hors ligne » |
+| Panneau plateforme vide | `APP_ID` absent | Normal en local ; renseigné automatiquement sur Clever Cloud |
