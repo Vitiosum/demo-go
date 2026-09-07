@@ -89,6 +89,8 @@ Aucune variable spécifique requise. Clever Cloud injecte `PORT` et `INSTANCE_NU
 Optionnel : `CC_HEALTH_CHECK_PATH=/health` (health check de déploiement).
 Le panneau plateforme lit aussi `CC_APP_NAME`, `APP_ID`, `INSTANCE_TYPE`, `CC_PRETTY_INSTANCE_NAME`, `COMMIT_ID` (7 car., repli `CC_COMMIT_ID`), `CC_DEPLOYMENT_ID` (16 car., repli `DEPLOYMENT_ID`) ; sans `APP_ID` il affiche « Local · hors Clever Cloud ».
 
+> **Commit déployé vide ?** Ce n'est pas un bug. La variable du commit n'est renseignée que pour un déploiement déclenché par l'intégration GitHub (`git push`). Un déploiement lancé par `clever restart` n'embarque aucun contexte de commit : `clever activity` affiche `N/A` dans la colonne commit, et le panneau affiche un tiret. Vérifié le 2026-09-07 en comparant les deux chemins de déploiement.
+
 ---
 
 ## 🛠️ Stack

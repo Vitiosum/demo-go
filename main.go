@@ -150,8 +150,10 @@ func goVersion() string {
 func env(k string) string { return os.Getenv(k) }
 
 // envAny returns the first non-empty value among the given variable names.
-// Clever Cloud does not prefix every injected variable with CC_ (the deployed
-// commit is exposed as COMMIT_ID), so a name list keeps the lookup tolerant.
+// The deployed-commit variable is only populated when the deployment comes from
+// the GitHub integration. A deployment triggered by `clever restart` carries no
+// commit context at all (clever activity shows N/A), so the panel legitimately
+// shows a dash there. Trying several names keeps the lookup tolerant.
 func envAny(keys ...string) string {
 	for _, k := range keys {
 		if v := os.Getenv(k); v != "" {
