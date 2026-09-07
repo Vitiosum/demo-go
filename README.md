@@ -13,7 +13,7 @@
 5. Optional but recommended: wire the health check — `clever env set CC_HEALTH_CHECK_PATH /health`
 6. Push → Clever Cloud builds and deploys automatically
 
-**Build configuration:** none. The build is driven by `go.mod` (module `github.com/Vitiosum/demo-go`, `go 1.26`): Clever Cloud reads the module name and runs `go install`. The instance needs Go ≥ 1.26 (the toolchain is downloaded automatically when `go.mod` asks for a newer one; otherwise set `CC_GO_VERSION`).
+**Build configuration:** none. The build is driven by `go.mod` (module `github.com/Vitiosum/demo-go`, `go 1.26`): Clever Cloud detects the Go runtime, compiles the module and runs the resulting binary — no Dockerfile, no image to maintain, exactly what the page claims. The instance needs Go ≥ 1.26 (the toolchain is downloaded automatically when `go.mod` asks for a newer one; otherwise set `CC_GO_VERSION`).
 
 `clevercloud/go.json` is still in the repository but is a **deprecated** mechanism according to Clever Cloud's Go documentation; it is not needed and can be deleted.
 
@@ -33,7 +33,7 @@
 
 ## Features
 
-- Live dashboard refreshed every 2 seconds via JS polling on `/stats`, with a 300 ms orange flash on every value change
+- Live dashboard refreshed every 2 seconds via JS polling on `/stats`, with a 300 ms orange flash when a metric changes (uptime ticks every second, without flashing)
 - Metrics: goroutines, heap (MB), uptime, GC cycles, request count, Go version
 - **Certification Clever Cloud** block right under the hero (two official tracks + CTA to the Academy)
 - **« Vu depuis Clever Cloud »** panel: application, App ID, instance (`INSTANCE_NUMBER` · `CC_PRETTY_INSTANCE_NAME`), instance type, deployed commit, deployment ID, host:port, runtime — shows « Local · hors Clever Cloud » when the app runs outside the platform
@@ -105,10 +105,12 @@ docs/superpowers/     → design specs and implementation plans
 | `INSTANCE_NUMBER`         | auto     | Injected by Clever Cloud, shown in the platform panel            |
 | `CC_APP_NAME`, `APP_ID`   | auto     | Application name and ID (panel; `APP_ID` toggles « Production ») |
 | `INSTANCE_TYPE`, `CC_PRETTY_INSTANCE_NAME` | auto | Instance type and friendly name                       |
-| `CC_COMMIT_ID`, `CC_DEPLOYMENT_ID` | auto | Deployed commit (7 chars) and deployment ID (16 chars)       |
+| `COMMIT_ID` / `CC_COMMIT_ID`, `CC_DEPLOYMENT_ID` / `DEPLOYMENT_ID` | auto | Deployed commit (7 chars) and deployment ID (16 chars) — both names are tried |
 | `CC_HEALTH_CHECK_PATH`    | optional | Set to `/health` so Clever Cloud checks the app before switching traffic |
 
 No variables need to be set manually. Reference: [Clever Cloud environment variables](https://www.clever.cloud/developers/doc/reference/reference-environment-variables/).
+
+**Empty deployed commit?** Not a bug: the commit context is only attached to a deployment coming from the GitHub integration (`git push`). A deployment triggered by `clever restart` carries none — `clever activity` shows `N/A` in the commit column — and the panel shows a dash.
 
 ---
 

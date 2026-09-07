@@ -51,7 +51,7 @@ Dashboard de métriques runtime Go en temps réel.
 L'app expose ses propres métriques Go (goroutines, heap, GC, uptime, requests) via une interface HTML mise à jour toutes les 2 secondes par polling JavaScript, et affiche ce que la plateforme injecte (panneau « Vu depuis Clever Cloud »).
 Conçue comme démo de déploiement sur **Clever Cloud**, avec la **certification Clever Cloud** (Academy) en position centrale.
 
-Déployée sur **Clever Cloud** (runtime Go).
+Runtime cible : **Go** sur Clever Cloud.
 
 ---
 
@@ -69,7 +69,7 @@ Déployée sur **Clever Cloud** (runtime Go).
 5. « Ce que Clever Cloud fait pour cette app » — 3 cartes
 6. `.cc-footer` — doc Go, variables d'environnement, Console, Academy (`is-cert`), GitHub
 
-**Motion :** point live pulsant, `.cc-reveal` (fade-in échelonné), flash `.cc-stat--flash` 300 ms sur changement de valeur. Pas d'orbes, pas de marquee, pas de bordure conique.
+**Motion :** point live pulsant, `.cc-reveal` (fade-in échelonné), flash `.cc-stat--flash` 300 ms sur changement de valeur — sauf l'uptime, qui s'incrémente chaque seconde sans flash (`set('v-uptime', …, null)`). Pas d'orbes, pas de marquee, pas de bordure conique.
 
 **Dernier redesign :** Clever Brand Kit — branche `redesign/clever-brand`
 
@@ -78,7 +78,7 @@ Déployée sur **Clever Cloud** (runtime Go).
 ## ☁️ Déploiement Clever Cloud
 
 - **Type d'app** : Go
-- **Build** : piloté par `go.mod` (module `github.com/Vitiosum/demo-go`, `go 1.26`) — Clever Cloud lit le nom du module et lance `go install` ; variables `CC_GO_*` si besoin. Le runtime doit disposer de Go ≥ 1.26 (`GOTOOLCHAIN=auto` télécharge sinon ; à défaut, `CC_GO_VERSION`).
+- **Build** : piloté par `go.mod` (module `github.com/Vitiosum/demo-go`, `go 1.26`) — Clever Cloud détecte le runtime Go, compile le module et lance le binaire (aucun Dockerfile, comme l'annonce la page) ; variables `CC_GO_*` si besoin. Le runtime doit disposer de Go ≥ 1.26 (`GOTOOLCHAIN=auto` télécharge sinon ; à défaut, `CC_GO_VERSION`).
 - **`clevercloud/go.json`** : méthode **dépréciée** par Clever Cloud (« should no longer be used »). Fichier conservé mais inutile : sa suppression est une décision utilisateur.
 - **Port** : `PORT` (env var Clever Cloud) ou `8080` par défaut
 - **Endpoints** : `GET /` (dashboard), `GET /health`, `GET /stats` (JSON), `GET /cc-brand.css`, `GET /app.js` — autres verbes → 405, autres chemins → 404
@@ -143,7 +143,7 @@ git commit -m "description"
 git push
 ```
 
-Clever Cloud redéploie automatiquement après chaque push.
+Avec l'intégration GitHub branchée sur l'application, Clever Cloud redéploie après chaque push.
 
 ---
 
