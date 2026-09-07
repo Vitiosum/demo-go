@@ -87,7 +87,7 @@ Déployée sur **Clever Cloud** (runtime Go).
 ### Variables d'environnement
 Aucune variable spécifique requise. Clever Cloud injecte `PORT` et `INSTANCE_NUMBER` automatiquement.
 Optionnel : `CC_HEALTH_CHECK_PATH=/health` (health check de déploiement).
-Le panneau plateforme lit aussi `CC_APP_NAME`, `APP_ID`, `INSTANCE_TYPE`, `CC_PRETTY_INSTANCE_NAME`, `CC_COMMIT_ID` (7 car.), `CC_DEPLOYMENT_ID` (16 car.) ; sans `APP_ID` il affiche « Local · hors Clever Cloud ».
+Le panneau plateforme lit aussi `CC_APP_NAME`, `APP_ID`, `INSTANCE_TYPE`, `CC_PRETTY_INSTANCE_NAME`, `COMMIT_ID` (7 car., repli `CC_COMMIT_ID`), `CC_DEPLOYMENT_ID` (16 car., repli `DEPLOYMENT_ID`) ; sans `APP_ID` il affiche « Local · hors Clever Cloud ».
 
 ---
 

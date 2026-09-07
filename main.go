@@ -149,6 +149,18 @@ func goVersion() string {
 
 func env(k string) string { return os.Getenv(k) }
 
+// envAny returns the first non-empty value among the given variable names.
+// Clever Cloud does not prefix every injected variable with CC_ (the deployed
+// commit is exposed as COMMIT_ID), so a name list keeps the lookup tolerant.
+func envAny(keys ...string) string {
+	for _, k := range keys {
+		if v := os.Getenv(k); v != "" {
+			return v
+		}
+	}
+	return ""
+}
+
 // cut returns s truncated to n runes (never in the middle of a UTF-8 sequence),
 // or "—" when s is empty.
 func cut(s string, n int) string {
@@ -177,8 +189,8 @@ func platformInfo() platform {
 		AppID:        cut(env("APP_ID"), 40),
 		Instance:     inst,
 		InstanceType: cut(env("INSTANCE_TYPE"), 20),
-		Commit:       cut(env("CC_COMMIT_ID"), 7),
-		Deployment:   cut(env("CC_DEPLOYMENT_ID"), 16),
+		Commit:       cut(envAny("COMMIT_ID", "CC_COMMIT_ID"), 7),
+		Deployment:   cut(envAny("CC_DEPLOYMENT_ID", "DEPLOYMENT_ID"), 16),
 	}
 }
 
