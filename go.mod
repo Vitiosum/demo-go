@@ -1,3 +1,3 @@
-module hello-go/m
+module github.com/Vitiosum/demo-go
 
-go 1.24
+go 1.26
