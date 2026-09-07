@@ -4,14 +4,19 @@
 package main
 
 import (
+	"context"
 	"embed"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"html/template"
+	"log"
 	"net/http"
 	"os"
+	"os/signal"
 	"runtime"
 	"sync/atomic"
+	"syscall"
 	"time"
 )
 
@@ -54,16 +59,58 @@ type statsResponse struct {
 }
 
 func main() {
+	// Clever Cloud collects stdout and stderr alike; one timestamped stream is enough.
+	log.SetOutput(os.Stdout)
+
 	port := listenPort()
-	http.HandleFunc("/", indexPage)
-	http.HandleFunc("/health", healthCheck)
-	http.HandleFunc("/stats", statsPage)
-	http.HandleFunc("/cc-brand.css", brandCSS)
-	fmt.Printf("Go runtime dashboard on :%s\n", port)
-	if err := http.ListenAndServe("0.0.0.0:"+port, nil); err != nil {
-		fmt.Fprintf(os.Stderr, "server error: %v\n", err)
-		os.Exit(1)
+	srv := &http.Server{
+		Addr:              "0.0.0.0:" + port,
+		Handler:           newHandler(),
+		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       10 * time.Second,
+		WriteTimeout:      15 * time.Second,
+		IdleTimeout:       60 * time.Second,
 	}
+
+	// SIGTERM is what Clever Cloud sends on redeploy or scale-down: finish the
+	// in-flight requests (10 s max) instead of cutting them.
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)
+	defer stop()
+
+	errCh := make(chan error, 1)
+	go func() {
+		log.Printf("Go runtime dashboard on :%s", port)
+		errCh <- srv.ListenAndServe()
+	}()
+
+	select {
+	case err := <-errCh:
+		if err != nil && !errors.Is(err, http.ErrServerClosed) {
+			log.Printf("server error: %v", err)
+			os.Exit(1)
+		}
+	case <-ctx.Done():
+		stop()
+		log.Printf("signal received, shutting down (10 s max)")
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		if err := srv.Shutdown(shutdownCtx); err != nil {
+			log.Printf("shutdown error: %v", err)
+			os.Exit(1)
+		}
+		log.Printf("server stopped")
+	}
+}
+
+// newHandler wires the routes. Method patterns (Go 1.22+) answer 405 to other verbs,
+// and "/{$}" matches the root path only, so any other path gets a 404.
+func newHandler() http.Handler {
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /{$}", indexPage)
+	mux.HandleFunc("GET /health", healthCheck)
+	mux.HandleFunc("GET /stats", statsPage)
+	mux.HandleFunc("GET /cc-brand.css", brandCSS)
+	return mux
 }
 
 // listenPort returns the port injected by Clever Cloud, or 8080 locally.
@@ -113,10 +160,6 @@ func platformInfo() platform {
 }
 
 func indexPage(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/" {
-		http.NotFound(w, r)
-		return
-	}
 	atomic.AddInt64(&requestCount, 1)
 	hostname, _ := os.Hostname()
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
