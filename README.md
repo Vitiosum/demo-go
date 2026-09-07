@@ -10,13 +10,12 @@
 2. In the Clever Cloud console, create a new **Go** application — connect your forked repo
 3. No add-on needed
 4. No environment variables to set manually — Clever Cloud injects `PORT`, `INSTANCE_NUMBER` and the `CC_*` variables automatically
-5. Push → Clever Cloud builds and deploys automatically
+5. Optional but recommended: wire the health check — `clever env set CC_HEALTH_CHECK_PATH /health`
+6. Push → Clever Cloud builds and deploys automatically
 
-**Configuration file:** `clevercloud/go.json`
+**Build configuration:** none. The build is driven by `go.mod` (module `github.com/Vitiosum/demo-go`, `go 1.26`): Clever Cloud reads the module name and runs `go install`. The instance needs Go ≥ 1.26 (the toolchain is downloaded automatically when `go.mod` asks for a newer one; otherwise set `CC_GO_VERSION`).
 
-```json
-{ "deploy": { "appIsToBeBuilt": true } }
-```
+`clevercloud/go.json` is still in the repository but is a **deprecated** mechanism according to Clever Cloud's Go documentation; it is not needed and can be deleted.
 
 ---
 
@@ -24,7 +23,7 @@
 
 | Layer      | Technology                                                              |
 |------------|-------------------------------------------------------------------------|
-| Language   | Go 1.24 (`go.mod`)                                                      |
+| Language   | Go 1.26 (`go.mod`)                                                      |
 | Deps       | None (stdlib + `embed` only)                                            |
 | Frontend   | `static/index.html` (Go `html/template`), compiled into the binary      |
 | Fonts      | Plus Jakarta Sans, JetBrains Mono (Google Fonts, system fallback)       |
@@ -38,7 +37,9 @@
 - Metrics: goroutines, heap (MB), uptime, GC cycles, request count, Go version
 - **Certification Clever Cloud** block right under the hero (two official tracks + CTA to the Academy)
 - **« Vu depuis Clever Cloud »** panel: application, App ID, instance (`INSTANCE_NUMBER` · `CC_PRETTY_INSTANCE_NAME`), instance type, deployed commit, deployment ID, host:port, runtime — shows « Local · hors Clever Cloud » when the app runs outside the platform
-- `/stats` JSON endpoint, `/health` endpoint (200 OK), `/cc-brand.css` (embedded stylesheet)
+- `/stats` JSON endpoint, `/health` endpoint (200 OK), `/cc-brand.css` and `/app.js` (embedded assets) — GET only (405 otherwise), unknown paths → 404
+- Security headers on every response: strict Content-Security-Policy (no inline script, Google Fonts allowed), `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options`
+- Hardened server: read/write/idle timeouts, graceful shutdown on SIGTERM (in-flight requests finish before a redeploy kills the instance)
 
 ---
 
@@ -52,7 +53,7 @@ The demo puts the [Clever Cloud Academy](https://academy.clever.cloud/) certific
 
 ### Prerequisites
 
-- Go 1.24+
+- Go 1.26+
 
 ### Run
 
@@ -66,9 +67,16 @@ go run .
 ### Check
 
 ```bash
-go vet ./... && go build -o /dev/null .
+gofmt -l . ; go vet ./... && go build -o /dev/null . && go test ./...
 curl localhost:8080/health   # OK
 curl localhost:8080/stats    # JSON
+```
+
+### Known vulnerabilities (stdlib included)
+
+```bash
+go install golang.org/x/vuln/cmd/govulncheck@latest
+govulncheck ./...
 ```
 
 ---
@@ -76,10 +84,12 @@ curl localhost:8080/stats    # JSON
 ## Project structure
 
 ```
-main.go               → HTTP server: /, /stats, /health, /cc-brand.css, platform info (CC_* env vars)
-static/index.html     → page template (html/template): Clever Brand Kit markup + polling JS
+main.go               → HTTP server (timeouts, SIGTERM shutdown), routes, secure() middleware (CSP), platform info (CC_* env vars)
+main_test.go          → httptest smoke tests (status codes, JSON, headers)
+static/index.html     → page template (html/template): Clever Brand Kit markup
+static/app.js         → polling script for /stats (separate file: the CSP forbids inline scripts)
 static/cc-brand.css   → Clever Brand Kit stylesheet, copied as-is from the shared kit
-clevercloud/go.json   → Clever Cloud build configuration
+clevercloud/go.json   → legacy build config, deprecated by Clever Cloud (the build is driven by go.mod)
 docs/superpowers/     → design specs and implementation plans
 ```
 
@@ -96,6 +106,7 @@ docs/superpowers/     → design specs and implementation plans
 | `CC_APP_NAME`, `APP_ID`   | auto     | Application name and ID (panel; `APP_ID` toggles « Production ») |
 | `INSTANCE_TYPE`, `CC_PRETTY_INSTANCE_NAME` | auto | Instance type and friendly name                       |
 | `CC_COMMIT_ID`, `CC_DEPLOYMENT_ID` | auto | Deployed commit (7 chars) and deployment ID (16 chars)       |
+| `CC_HEALTH_CHECK_PATH`    | optional | Set to `/health` so Clever Cloud checks the app before switching traffic |
 
 No variables need to be set manually. Reference: [Clever Cloud environment variables](https://www.clever.cloud/developers/doc/reference/reference-environment-variables/).
 

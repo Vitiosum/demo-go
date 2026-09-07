@@ -78,12 +78,15 @@ Déployée sur **Clever Cloud** (runtime Go).
 ## ☁️ Déploiement Clever Cloud
 
 - **Type d'app** : Go
-- **Config** : `clevercloud/go.json` → `appIsToBeBuilt: true`
+- **Build** : piloté par `go.mod` (module `github.com/Vitiosum/demo-go`, `go 1.26`) — Clever Cloud lit le nom du module et lance `go install` ; variables `CC_GO_*` si besoin. Le runtime doit disposer de Go ≥ 1.26 (`GOTOOLCHAIN=auto` télécharge sinon ; à défaut, `CC_GO_VERSION`).
+- **`clevercloud/go.json`** : méthode **dépréciée** par Clever Cloud (« should no longer be used »). Fichier conservé mais inutile : sa suppression est une décision utilisateur.
 - **Port** : `PORT` (env var Clever Cloud) ou `8080` par défaut
-- **Endpoints** : `GET /` (dashboard), `GET /health`, `GET /stats` (JSON), `GET /cc-brand.css`
+- **Endpoints** : `GET /` (dashboard), `GET /health`, `GET /stats` (JSON), `GET /cc-brand.css`, `GET /app.js` — autres verbes → 405, autres chemins → 404
+- **Health check** : brancher `/health` au déploiement avec `clever env set CC_HEALTH_CHECK_PATH /health`
 
 ### Variables d'environnement
 Aucune variable spécifique requise. Clever Cloud injecte `PORT` et `INSTANCE_NUMBER` automatiquement.
+Optionnel : `CC_HEALTH_CHECK_PATH=/health` (health check de déploiement).
 Le panneau plateforme lit aussi `CC_APP_NAME`, `APP_ID`, `INSTANCE_TYPE`, `CC_PRETTY_INSTANCE_NAME`, `CC_COMMIT_ID` (7 car.), `CC_DEPLOYMENT_ID` (16 car.) ; sans `APP_ID` il affiche « Local · hors Clever Cloud ».
 
 ---
@@ -92,7 +95,7 @@ Le panneau plateforme lit aussi `CC_APP_NAME`, `APP_ID`, `INSTANCE_TYPE`, `CC_PR
 
 | Élément | Valeur |
 |---|---|
-| Go | 1.24 (`go.mod`) |
+| Go | 1.26 (`go.mod`, sans directive toolchain) |
 | Dépendances | Aucune (stdlib + `embed`) |
 | Frontend | `static/index.html` (`html/template`) + `static/cc-brand.css`, embarqués dans le binaire |
 | Base de données | Aucune |
@@ -102,10 +105,12 @@ Le panneau plateforme lit aussi `CC_APP_NAME`, `APP_ID`, `INSTANCE_TYPE`, `CC_PR
 ## 📁 Structure clé
 
 ```
-main.go               → serveur HTTP, /stats, /health, /cc-brand.css, platformInfo() (variables CC_*)
-static/index.html     → template de la page (Clever Brand Kit) + JS de polling
+main.go               → serveur HTTP (timeouts, arrêt propre SIGTERM), routes, middleware secure() (CSP), platformInfo() (variables CC_*)
+main_test.go          → tests de fumée httptest (codes HTTP, JSON, en-têtes)
+static/index.html     → template de la page (Clever Brand Kit)
+static/app.js         → JS de polling de /stats (fichier séparé : la CSP interdit les scripts inline)
 static/cc-brand.css   → kit CSS partagé (copie, ne pas modifier)
-clevercloud/go.json   → config de build Clever Cloud
+clevercloud/go.json   → ancien fichier de config, déprécié par Clever Cloud (build piloté par go.mod)
 docs/superpowers/     → specs et plans
 go.mod                → module Go
 ```
@@ -119,8 +124,11 @@ go.mod                → module Go
 go run .
 PORT=8084 go run .
 
-# Vérifier / builder
-go vet ./... && go build -o app .
+# Vérifier / builder / tester
+gofmt -l . ; go vet ./... && go build -o /dev/null . && go test ./...
+
+# Vulnérabilités connues (stdlib incluse)
+govulncheck ./...    # go install golang.org/x/vuln/cmd/govulncheck@latest
 ```
 
 ---
@@ -144,6 +152,8 @@ Clever Cloud redéploie automatiquement après chaque push.
 - `INSTANCE_NUMBER` est injecté par Clever Cloud pour distinguer les instances en cas de scaling
 - `static/cc-brand.css` est une copie du kit partagé : le remplacer entièrement lors d'une mise à jour du kit, ne pas l'éditer localement
 - Le template est un `html/template` : les valeurs sont échappées automatiquement, ne pas y injecter de HTML brut
+- CSP stricte (`script-src 'self'`) : tout JavaScript va dans `static/app.js`, jamais en `<script>` inline ni en attribut `on*` ; seules Google Fonts sont autorisées en externe
+- Le serveur a des timeouts (lecture 10 s, écriture 15 s) et s'arrête proprement sur SIGTERM (10 s) : ne pas revenir à `http.ListenAndServe` nu
 
 ---
 
@@ -156,4 +166,5 @@ Clever Cloud redéploie automatiquement après chaque push.
 | Page sans style | `/cc-brand.css` en 404 | Vérifier que `static/cc-brand.css` est présent et committé |
 | Lien doc cassé | URL Clever Cloud modifiée | Mettre à jour l'URL dans `static/index.html` |
 | Métriques figées | Erreur fetch `/stats` côté JS | Vérifier les logs runtime Clever Cloud ; la pill passe en « Hors ligne » |
+| Script bloqué (console : « Refused to execute ») | Script inline ou domaine hors CSP | Mettre le JS dans `static/app.js` ou étendre `contentSecurityPolicy` dans `main.go` |
 | Panneau plateforme vide | `APP_ID` absent | Normal en local ; renseigné automatiquement sur Clever Cloud |

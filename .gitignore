@@ -1,3 +1,14 @@
 .clever.json
 main
 .superpowers/
+
+# build outputs
+app
+demo-go
+*.exe
+
+# local env / OS / logs
+.env
+.env.*
+.DS_Store
+*.log
