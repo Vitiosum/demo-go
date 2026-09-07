@@ -4,6 +4,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"embed"
 	"encoding/json"
@@ -15,6 +16,7 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
+	"sync"
 	"sync/atomic"
 	"syscall"
 	"time"
@@ -127,13 +129,14 @@ func goVersion() string {
 
 func env(k string) string { return os.Getenv(k) }
 
-// cut returns s truncated to n bytes, or "—" when s is empty.
+// cut returns s truncated to n runes (never in the middle of a UTF-8 sequence),
+// or "—" when s is empty.
 func cut(s string, n int) string {
 	if s == "" {
 		return "—"
 	}
-	if len(s) > n {
-		return s[:n]
+	if r := []rune(s); len(r) > n {
+		return string(r[:n])
 	}
 	return s
 }
@@ -145,7 +148,7 @@ func platformInfo() platform {
 	if n := env("INSTANCE_NUMBER"); n != "" {
 		inst = "#" + n
 		if p := env("CC_PRETTY_INSTANCE_NAME"); p != "" {
-			inst += " · " + p
+			inst += " · " + cut(p, 40)
 		}
 	}
 	return platform{
@@ -162,8 +165,10 @@ func platformInfo() platform {
 func indexPage(w http.ResponseWriter, r *http.Request) {
 	atomic.AddInt64(&requestCount, 1)
 	hostname, _ := os.Hostname()
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	err := indexTmpl.Execute(w, pageData{
+	// Render into a buffer first: a template error must yield a clean 500,
+	// not a 200 with a half-written page.
+	var buf bytes.Buffer
+	err := indexTmpl.Execute(&buf, pageData{
 		Hostname: hostname,
 		Port:     listenPort(),
 		GoVer:    goVersion(),
@@ -171,23 +176,51 @@ func indexPage(w http.ResponseWriter, r *http.Request) {
 		CC:       platformInfo(),
 	})
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "template error: %v\n", err)
+		log.Printf("template error: %v", err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	if _, err := buf.WriteTo(w); err != nil {
+		log.Printf("write error (/): %v", err)
 	}
 }
 
+// memSnap caches the last runtime.MemStats reading: ReadMemStats stops the world,
+// so it is refreshed at most once per second whatever the polling rate.
+var memSnap struct {
+	mu    sync.Mutex
+	at    time.Time
+	heap  uint64
+	numGC uint32
+}
+
+func memStats() (heap uint64, numGC uint32) {
+	memSnap.mu.Lock()
+	defer memSnap.mu.Unlock()
+	if time.Since(memSnap.at) >= time.Second {
+		var ms runtime.MemStats
+		runtime.ReadMemStats(&ms)
+		memSnap.heap, memSnap.numGC, memSnap.at = ms.HeapAlloc, ms.NumGC, time.Now()
+	}
+	return memSnap.heap, memSnap.numGC
+}
+
 func statsPage(w http.ResponseWriter, r *http.Request) {
-	var ms runtime.MemStats
-	runtime.ReadMemStats(&ms)
+	heap, numGC := memStats()
 	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	json.NewEncoder(w).Encode(statsResponse{
+	w.Header().Set("Cache-Control", "no-store")
+	err := json.NewEncoder(w).Encode(statsResponse{
 		Goroutines: runtime.NumGoroutine(),
-		HeapMB:     fmt.Sprintf("%.2f", float64(ms.HeapAlloc)/1024/1024),
-		GCCycles:   ms.NumGC,
+		HeapMB:     fmt.Sprintf("%.2f", float64(heap)/1024/1024),
+		GCCycles:   numGC,
 		UptimeSec:  int64(time.Since(startTime).Seconds()),
 		Requests:   atomic.LoadInt64(&requestCount),
 		GoVersion:  goVersion(),
 	})
+	if err != nil {
+		log.Printf("encode error (/stats): %v", err)
+	}
 }
 
 // brandCSS serves the Clever Brand Kit stylesheet straight from the embedded FS.
@@ -199,10 +232,13 @@ func brandCSS(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "text/css; charset=utf-8")
 	w.Header().Set("Cache-Control", "public, max-age=86400")
-	w.Write(b)
+	if _, err := w.Write(b); err != nil {
+		log.Printf("write error (/cc-brand.css): %v", err)
+	}
 }
 
 func healthCheck(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("OK"))
+	if _, err := w.Write([]byte("OK")); err != nil {
+		log.Printf("write error (/health): %v", err)
+	}
 }
