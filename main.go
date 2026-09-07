@@ -111,8 +111,28 @@ func newHandler() http.Handler {
 	mux.HandleFunc("GET /{$}", indexPage)
 	mux.HandleFunc("GET /health", healthCheck)
 	mux.HandleFunc("GET /stats", statsPage)
-	mux.HandleFunc("GET /cc-brand.css", brandCSS)
-	return mux
+	mux.HandleFunc("GET /cc-brand.css", staticFile("cc-brand.css", "text/css; charset=utf-8", "public, max-age=86400"))
+	mux.HandleFunc("GET /app.js", staticFile("app.js", "text/javascript; charset=utf-8", "public, max-age=3600"))
+	return secure(mux)
+}
+
+// contentSecurityPolicy allows only what the page needs: same-origin script and
+// data, Google Fonts (stylesheet + font files), inline <style> and style="--i:n"
+// attributes from the brand kit, data: URIs for the favicon and CSS masks.
+const contentSecurityPolicy = "default-src 'self'; script-src 'self'; " +
+	"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; " +
+	"img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'"
+
+// secure adds the security headers to every response, 404/405 included.
+func secure(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		h := w.Header()
+		h.Set("X-Content-Type-Options", "nosniff")
+		h.Set("Referrer-Policy", "strict-origin-when-cross-origin")
+		h.Set("X-Frame-Options", "DENY")
+		h.Set("Content-Security-Policy", contentSecurityPolicy)
+		next.ServeHTTP(w, r)
+	})
 }
 
 // listenPort returns the port injected by Clever Cloud, or 8080 locally.
@@ -223,17 +243,20 @@ func statsPage(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// brandCSS serves the Clever Brand Kit stylesheet straight from the embedded FS.
-func brandCSS(w http.ResponseWriter, r *http.Request) {
-	b, err := staticFS.ReadFile("static/cc-brand.css")
-	if err != nil {
-		http.NotFound(w, r)
-		return
-	}
-	w.Header().Set("Content-Type", "text/css; charset=utf-8")
-	w.Header().Set("Cache-Control", "public, max-age=86400")
-	if _, err := w.Write(b); err != nil {
-		log.Printf("write error (/cc-brand.css): %v", err)
+// staticFile serves one file of the embedded static/ directory (brand kit
+// stylesheet, polling script) with its MIME type and cache policy.
+func staticFile(name, contentType, cacheControl string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		b, err := staticFS.ReadFile("static/" + name)
+		if err != nil {
+			http.NotFound(w, r)
+			return
+		}
+		w.Header().Set("Content-Type", contentType)
+		w.Header().Set("Cache-Control", cacheControl)
+		if _, err := w.Write(b); err != nil {
+			log.Printf("write error (/%s): %v", name, err)
+		}
 	}
 }
 
