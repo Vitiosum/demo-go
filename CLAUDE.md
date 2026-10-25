@@ -47,7 +47,7 @@ Tu dois raisonner avec fermeté : ne propose pas plusieurs pistes floues si une 
 
 ## 🎯 Contexte du projet
 
-Dashboard de métriques runtime Go en temps réel, refait pour la vidéo du 2026-11-04 (branche `redesign/video`).
+Dashboard de métriques runtime Go en temps réel, refait pour la vidéo du 2026-11-04.
 Le premier écran montre le processus qui répond : « N goroutines en ce moment. », un oscilloscope des 90 dernières secondes (goroutines, heap, cycles de GC, seuil `HEAP_ALERT_MB`) et un pupitre de trois boutons qui font réagir le runtime (charge bornée).
 Certification Clever Cloud Academy mise en avant (bouton dès la topbar et le premier écran, grand bloc juste dessous).
 
@@ -100,7 +100,7 @@ Inutiles ici : `CC_GO_PKG` (« Overrides auto-detection from go.mod », le modul
 Valeur invalide ou hors bornes → défaut (`loadDemoConfig`, testé).
 Variables plateforme affichées (« injecté au déploiement » en local) : `CC_APP_NAME`, `APP_ID` (bascule Live/Local), `INSTANCE_NUMBER` · `CC_PRETTY_INSTANCE_NAME`, `INSTANCE_TYPE`, `COMMIT_ID`/`CC_COMMIT_ID` (7 car.), `CC_DEPLOYMENT_ID`/`DEPLOYMENT_ID` (16 car.).
 
-> **Commit déployé vide ?** Un déploiement lancé par `clever restart` n'embarque aucun commit (`clever activity` affiche `N/A`) : le pupitre affiche « aucun (clever restart) ». Vérifié le 2026-09-07.
+> **Commit déployé** : lu dans `COMMIT_ID`/`CC_COMMIT_ID`. Vérifié le 2026-10-25 (sur la démo Rust) : `CC_COMMIT_ID` reste renseigné après un `clever restart` et l'est aussi avec `clever deploy`. Si la variable est vide, le pupitre affiche le libellé de repli du code « aucun (clever restart) » (ne pas en déduire qu'elle est toujours absente après un restart).
 
 ### Charge bornée (pupitre)
 - Goroutines : `BURST_GOROUTINES` goroutines qui dorment 4 à 12 s ; une rafale à la fois (CAS atomique), sinon 429 + `Retry-After`
@@ -164,10 +164,13 @@ govulncheck ./...    # go install golang.org/x/vuln/cmd/govulncheck@latest
 ```bash
 git add .
 git commit -m "description"
-git push
+git push          # sauvegarde GitHub uniquement
+clever deploy     # déploie main sur Clever Cloud
 ```
 
-Avec l'intégration GitHub branchée sur l'application, Clever Cloud redéploie après chaque push.
+Pas de liaison GitHub → Clever Cloud (`clever create --github` refusé par l'API, « wrong oauth application data » ; intégration GitHub du compte à reconnecter dans la Console) : un `git push` ne redéploie pas.
+
+App en service du 2026-10-25 au 2026-11-05 (suppression planifiée après le tournage vidéo du 2026-11-04) : `app_61a7ff90-36fe-49eb-b42b-2077d0e9db58`, https://app-61a7ff90-36fe-49eb-b42b-2077d0e9db58.cleverapps.io/. Après cette date, recréer avec la procédure du README.
 
 ---
 
