@@ -47,49 +47,73 @@ Tu dois raisonner avec fermeté : ne propose pas plusieurs pistes floues si une 
 
 ## 🎯 Contexte du projet
 
-Dashboard de métriques runtime Go en temps réel.
-L'app expose ses propres métriques Go (goroutines, heap, GC, uptime, requests) via une interface HTML mise à jour toutes les 2 secondes par polling JavaScript, et affiche ce que la plateforme injecte (panneau « Vu depuis Clever Cloud »).
-Conçue comme démo de déploiement sur **Clever Cloud**, avec la **certification Clever Cloud** (Academy) en position centrale.
+Dashboard de métriques runtime Go en temps réel, refait pour la vidéo du 2026-11-04 (branche `redesign/video`).
+Le premier écran montre le processus qui répond : « N goroutines en ce moment. », un oscilloscope des 90 dernières secondes (goroutines, heap, cycles de GC, seuil `HEAP_ALERT_MB`) et un pupitre de trois boutons qui font réagir le runtime (charge bornée).
+Certification Clever Cloud Academy mise en avant (bouton dès la topbar et le premier écran, grand bloc juste dessous).
 
-Runtime cible : **Go** sur Clever Cloud.
+Runtime cible : **Go** sur Clever Cloud. Aucune base de données.
 
 ---
 
 ## 🎨 Design system — Clever Brand Kit
 
-**Kit :** `static/cc-brand.css`, copie **à l'identique** du kit partagé (`docs/superpowers/brand-kit/cc-brand.css` du monorepo). Ne pas le modifier : les styles propres à la démo tiennent dans le `<style>` court de `static/index.html` (`.go-layout`, `.go-metrics`, `.go-live`).
-**Spec :** `docs/superpowers/specs/2026-09-06-clever-brand-design.md`
-**Typographie :** Plus Jakarta Sans (texte), JetBrains Mono (valeurs techniques) — Google Fonts, repli système.
-**Couleurs :** fond navy `#13172e`, surfaces `#1c2045`, texte `#f9f9fb`, dégradé Clever `#f57461 → #cb1c42 → #a51050`, vert `#11bea9` (ok), orange `#f57461` (live, flash).
-**Structure de page (ordre imposé par `reference.html`) :**
-1. `.cc-topbar` — logo Clever Cloud (SVG inline, `{{template "cc-logo"}}`), nom « Go Runtime », pill mono « Go {{.GoVer}} · stdlib », pill live/local, « Se certifier ↗ »
-2. `.cc-hero` — « Go, *sans dépendance, en production.* », lead, 4 facts
-3. `.cc-cert` — badge SVG inline, 2 parcours Academy, CTA « Obtenir ma certification »
-4. Contenu démo — 6 `.cc-card--accent` avec `.cc-stat` (`id` `v-*` lus par le JS) + `.cc-platform` « Vu depuis Clever Cloud »
-5. « Ce que Clever Cloud fait pour cette app » — 3 cartes
-6. `.cc-footer` — doc Go, variables d'environnement, Console, Academy (`is-cert`), GitHub
+**Kit :** `static/cc-brand.css`, copie **à l'identique** du kit partagé. Ne pas le modifier : les styles propres à la démo sont dans le `<style>` de `static/index.html` (préfixe `.go-`).
+**Typographie :** Plus Jakarta Sans (texte), JetBrains Mono (valeurs techniques).
+**Couleurs :** navy `#13172e`, surfaces `#1c2045`, dégradé Clever ; texte blanc sur dégradé = départ assombri `#d14836 → #cb1c42 → #a51050` (AA). Séries du graphe : goroutines `#b7b5ff`, heap `#f57461`, GC `#5fe3d3`, seuil `#ff6b81`.
+**Structure de la page :**
+1. `.cc-topbar` — logo, « Go Runtime », pill « Go x.y · stdlib », pill live/local, « Se certifier » (ancre `#cert-title`)
+2. `.go-announce` — bandeau `ANNOUNCEMENT` (si non vide)
+3. `.go-pulse` (premier écran) — titre « N goroutines / en ce moment. », sous-ligne mono (heap, GC, uptime, arch), CTA « Faire réagir le runtime » + « Se certifier Clever Cloud ↓ », oscilloscope `.go-scope` (SVG dessiné par `app.js`), légende, `.go-figures` (heap, GC, pause, GOMAXPROCS, pages, Go) ; à droite le pupitre `.go-desk` (nom d'app + pastille `APP_ENV`, 3 boutons, variables de démo, variables Clever)
+4. `.go-cert` — badge SVG (`{{template "cc-badge"}}`, une seule fois par page : il porte des `id`), deux parcours Academy, « Passer la certification »
+5. `.go-build` — « Du git push au binaire » (4 étapes réelles du build Clever)
+6. `.cc-footer`
 
-**Motion :** point live pulsant, `.cc-reveal` (fade-in échelonné), flash `.cc-stat--flash` 300 ms sur changement de valeur — sauf l'uptime, qui s'incrémente chaque seconde sans flash (`set('v-uptime', …, null)`). Pas d'orbes, pas de marquee, pas de bordure conique.
-
-**Dernier redesign :** Clever Brand Kit — branche `redesign/clever-brand`
+**Motion :** `.cc-reveal` du kit, badge en rotation lente, graphe redessiné chaque seconde ; tout est coupé sous `prefers-reduced-motion` sauf la mise à jour des données.
 
 ---
 
 ## ☁️ Déploiement Clever Cloud
 
-- **Type d'app** : Go
-- **Build** : piloté par `go.mod` (module `github.com/Vitiosum/demo-go`, `go 1.26`) — Clever Cloud détecte le runtime Go, compile le module et lance le binaire (aucun Dockerfile, comme l'annonce la page) ; variables `CC_GO_*` si besoin. Le runtime doit disposer de Go ≥ 1.26 (`GOTOOLCHAIN=auto` télécharge sinon ; à défaut, `CC_GO_VERSION`).
-- **`clevercloud/go.json`** : méthode **dépréciée** par Clever Cloud (« should no longer be used »). Fichier conservé mais inutile : sa suppression est une décision utilisateur.
-- **Port** : `PORT` (env var Clever Cloud) ou `8080` par défaut
-- **Endpoints** : `GET /` (dashboard), `GET /health`, `GET /stats` (JSON), `GET /cc-brand.css`, `GET /app.js` — autres verbes → 405, autres chemins → 404
-- **Health check** : brancher `/health` au déploiement avec `clever env set CC_HEALTH_CHECK_PATH /health`
+- **Type d'app** : `go` (`clever create --type go`), aucun add-on, pas de build dédié nécessaire
+- **Build** : méthode `gomod` — `go install` du module `github.com/Vitiosum/demo-go` lu dans `go.mod`, binaire `$GOPATH/bin/demo-go` lancé tel quel
+- **Version Go** : `go.mod` déclare `go 1.27` ; l'image Clever est en Go 1.27.3 (changelog « Images update » du 2026-10-21). Ne jamais déclarer une version plus récente que l'image : la doc indique « If the Go version declared in your go.mod file is newer than the one installed on the instance, the Go toolchain downloads the required version automatically » (téléchargement à chaque build). `CC_GO_VERSION` n'existe pas.
+- **`clevercloud/go.json`** : déprécié (« Using clevercloud/go.json to define Makefile and binary paths is a deprecated method and should no longer be used »). Son effet réel au build n'a pas été mesuré ; sa suppression reste une décision utilisateur.
+- **Port** : `PORT` ou `8080` ; écoute sur `0.0.0.0`
+- **Routes** : `GET /`, `GET /stats` (`?history=1` pour les 90 dernières mesures), `GET /health`, `GET /cc-brand.css`, `GET /app.js`, `POST /load/goroutines|heap|gc` — autres verbes → 405, autres chemins → 404
 
-### Variables d'environnement
-Aucune variable spécifique requise. Clever Cloud injecte `PORT` et `INSTANCE_NUMBER` automatiquement.
-Optionnel : `CC_HEALTH_CHECK_PATH=/health` (health check de déploiement).
-Le panneau plateforme lit aussi `CC_APP_NAME`, `APP_ID`, `INSTANCE_TYPE`, `CC_PRETTY_INSTANCE_NAME`, `COMMIT_ID` (7 car., repli `CC_COMMIT_ID`), `CC_DEPLOYMENT_ID` (16 car., repli `DEPLOYMENT_ID`) ; sans `APP_ID` il affiche « Local · hors Clever Cloud ».
+### Variables Clever à poser (vérifiées dans la doc le 2026-10-25)
+| Variable | Valeur | Preuve doc |
+|---|---|---|
+| `CC_GO_BUILD_TOOL` | `gomod` | « Available values: gomod, gobuild, makefile. Determines how to build and install your application. » ; gomod « Requires a go.mod file at the root of your application » |
+| `CC_HEALTH_CHECK_PATH` | `/health` | « If these paths don't return a 2xx response code, the deployment fails. » |
 
-> **Commit déployé vide ?** Ce n'est pas un bug. La variable du commit n'est renseignée que pour un déploiement déclenché par l'intégration GitHub (`git push`). Un déploiement lancé par `clever restart` n'embarque aucun contexte de commit : `clever activity` affiche `N/A` dans la colonne commit, et le panneau affiche un tiret. Vérifié le 2026-09-07 en comparant les deux chemins de déploiement.
+Inutiles ici : `CC_GO_PKG` (« Overrides auto-detection from go.mod », le module est à la racine), `CC_GO_RUNDIR` (« Deprecated »), `CC_CACHE_DEPENDENCIES` (« Enable caching of your build dependencies » : aucune dépendance à mettre en cache), `CC_IGNORE_FROM_BUILDCACHE` (rien de lourd dans l'archive). Le build compile la seule bibliothèque standard : c'est déjà le cas le plus court.
+
+### Variables de démo (onglet Variables de la console)
+| Variable | Défaut | Effet visible |
+|---|---|---|
+| `APP_ENV` | `local` | Pastille du pupitre, dégradé Clever si `production` |
+| `ANNOUNCEMENT` | vide | Bandeau en haut de la page (160 caractères max) |
+| `BURST_GOROUTINES` | `500` (1..2000) | Libellé du bouton et hauteur du pic de goroutines |
+| `HEAP_ALERT_MB` | `32` (1..1024) | Seuil pointillé sur le graphe ; au-dessus, chiffre Heap en rouge et « Heap au-dessus de N MB » |
+
+Valeur invalide ou hors bornes → défaut (`loadDemoConfig`, testé).
+Variables plateforme affichées (« injecté au déploiement » en local) : `CC_APP_NAME`, `APP_ID` (bascule Live/Local), `INSTANCE_NUMBER` · `CC_PRETTY_INSTANCE_NAME`, `INSTANCE_TYPE`, `COMMIT_ID`/`CC_COMMIT_ID` (7 car.), `CC_DEPLOYMENT_ID`/`DEPLOYMENT_ID` (16 car.).
+
+> **Commit déployé vide ?** Un déploiement lancé par `clever restart` n'embarque aucun commit (`clever activity` affiche `N/A`) : le pupitre affiche « aucun (clever restart) ». Vérifié le 2026-09-07.
+
+### Charge bornée (pupitre)
+- Goroutines : `BURST_GOROUTINES` goroutines qui dorment 4 à 12 s ; une rafale à la fois (CAS atomique), sinon 429 + `Retry-After`
+- Heap : 64 MB fixes (pages touchées), tenus 8 s, libérés puis `runtime.GC()` ; une allocation à la fois
+- GC : `runtime.GC()` au plus toutes les 2 s
+- Pire cas : 2000 goroutines endormies + 64 MB. Aucune boucle CPU.
+
+### Scénario vidéo
+1. Ouvrir la page : le graphe est déjà plein (historique servi par le serveur), le titre bouge chaque seconde.
+2. « Lancer N goroutines » : pic violet, descente en pente ; le titre passe à plusieurs centaines.
+3. « Allouer 64 MB » : la heap franchit le seuil, chiffre rouge et pastille d'alerte ; 8 s plus tard, chute et trait de GC.
+4. Console Clever → Variables : `HEAP_ALERT_MB=128`, `ANNOUNCEMENT=…`, `APP_ENV=production` ; `clever restart` ; recharger : bandeau, pastille dégradée, seuil remonté (l'allocation ne le franchit plus).
+5. Défiler vers le bloc certification → « Passer la certification ».
 
 ---
 
@@ -97,9 +121,9 @@ Le panneau plateforme lit aussi `CC_APP_NAME`, `APP_ID`, `INSTANCE_TYPE`, `CC_PR
 
 | Élément | Valeur |
 |---|---|
-| Go | 1.26 (`go.mod`, sans directive toolchain) |
+| Go | 1.27 (`go.mod`, sans directive toolchain) |
 | Dépendances | Aucune (stdlib + `embed`) |
-| Frontend | `static/index.html` (`html/template`) + `static/cc-brand.css`, embarqués dans le binaire |
+| Frontend | `static/index.html` (`html/template`), `static/app.js`, `static/cc-brand.css`, embarqués dans le binaire |
 | Base de données | Aucune |
 
 ---
@@ -107,14 +131,14 @@ Le panneau plateforme lit aussi `CC_APP_NAME`, `APP_ID`, `INSTANCE_TYPE`, `CC_PR
 ## 📁 Structure clé
 
 ```
-main.go               → serveur HTTP (timeouts, arrêt propre SIGTERM), routes, middleware secure() (CSP), platformInfo() (variables CC_*)
-main_test.go          → tests de fumée httptest (codes HTTP, JSON, en-têtes)
-static/index.html     → template de la page (Clever Brand Kit)
-static/app.js         → JS de polling de /stats (fichier séparé : la CSP interdit les scripts inline)
+main.go               → serveur HTTP (timeouts, arrêt propre SIGTERM), routes, middleware secure() (CSP), handlers
+pulse.go              → échantillonneur 1 mesure/s (anneau de 90), générateurs de charge bornés
+config.go             → variables de démo (loadDemoConfig) et variables Clever (loadPlatform)
+main_test.go          → tests httptest (routes, en-têtes, variables de démo, bornes de charge)
+static/index.html     → template de la page (logo et badge SVG en {{define}})
+static/app.js         → oscilloscope SVG, polling /stats, boutons (fichier séparé : CSP)
 static/cc-brand.css   → kit CSS partagé (copie, ne pas modifier)
-clevercloud/go.json   → ancien fichier de config, déprécié par Clever Cloud (build piloté par go.mod)
-docs/superpowers/     → specs et plans
-go.mod                → module Go
+clevercloud/go.json   → ancien fichier, déprécié par la doc Clever (suppression : décision utilisateur)
 ```
 
 ---
@@ -122,12 +146,12 @@ go.mod                → module Go
 ## ⚙️ Commandes utiles
 
 ```bash
-# Lancer en local
-go run .
-PORT=8084 go run .
+# Lancer en local (port de tournage : 8104)
+PORT=8104 go run .
+PORT=8104 APP_ENV=production ANNOUNCEMENT="Maintenance ce soir à 22 h" BURST_GOROUTINES=800 HEAP_ALERT_MB=40 go run .
 
-# Vérifier / builder / tester
-gofmt -l . ; go vet ./... && go build -o /dev/null . && go test ./...
+# Vérifier / tester
+gofmt -l . ; go vet ./... && go test -race ./...
 
 # Vulnérabilités connues (stdlib incluse)
 govulncheck ./...    # go install golang.org/x/vuln/cmd/govulncheck@latest
@@ -155,6 +179,8 @@ Avec l'intégration GitHub branchée sur l'application, Clever Cloud redéploie 
 - `static/cc-brand.css` est une copie du kit partagé : le remplacer entièrement lors d'une mise à jour du kit, ne pas l'éditer localement
 - Le template est un `html/template` : les valeurs sont échappées automatiquement, ne pas y injecter de HTML brut
 - CSP stricte (`script-src 'self'`) : tout JavaScript va dans `static/app.js`, jamais en `<script>` inline ni en attribut `on*` ; seules Google Fonts sont autorisées en externe
+- `runtime.ReadMemStats` arrête le monde : il ne tourne que dans l'échantillonneur, jamais dans un handler
+- Toute nouvelle charge du pupitre doit rester bornée (une à la fois, taille fixe, 429 sinon)
 - Le serveur a des timeouts (lecture 10 s, écriture 15 s) et s'arrête proprement sur SIGTERM (10 s) : ne pas revenir à `http.ListenAndServe` nu
 
 ---
@@ -167,6 +193,8 @@ Avec l'intégration GitHub branchée sur l'application, Clever Cloud redéploie 
 | `pattern static: no matching files` | Build hors du package | Utiliser `go run .` / `go build .` |
 | Page sans style | `/cc-brand.css` en 404 | Vérifier que `static/cc-brand.css` est présent et committé |
 | Lien doc cassé | URL Clever Cloud modifiée | Mettre à jour l'URL dans `static/index.html` |
-| Métriques figées | Erreur fetch `/stats` côté JS | Vérifier les logs runtime Clever Cloud ; la pill passe en « Hors ligne » |
+| Métriques figées | Erreur fetch `/stats` côté JS | Vérifier les logs runtime Clever Cloud ; le pupitre affiche « Hors ligne · nouvelle tentative » |
+| Bouton sans effet, « Une rafale tourne déjà » | Rafale précédente encore active (429) | Attendre le compte à rebours affiché sur le bouton |
+| Build plus long que prévu | `go.mod` déclare une version plus récente que l'image | Revenir à une version ≤ celle de l'image (changelog Clever) |
 | Script bloqué (console : « Refused to execute ») | Script inline ou domaine hors CSP | Mettre le JS dans `static/app.js` ou étendre `contentSecurityPolicy` dans `main.go` |
-| Panneau plateforme vide | `APP_ID` absent | Normal en local ; renseigné automatiquement sur Clever Cloud |
+| « injecté au déploiement » partout | `APP_ID` absent | Normal en local ; renseigné automatiquement sur Clever Cloud |

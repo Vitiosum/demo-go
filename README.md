@@ -1,122 +1,86 @@
 # Go Runtime Dashboard — Live metrics on Clever Cloud
 
-> Real-time Go runtime metrics (goroutines, heap, GC, uptime, requests) served by a dependency-free Go app deployed on Clever Cloud — dressed in the **Clever Brand Kit**, with the Clever Cloud certification front and center.
+> The Go process that answers you, measured every second: goroutines, heap, GC cycles and pauses, drawn live on an oscilloscope. Three bounded buttons make the runtime react on camera. Standard library only, deployed on Clever Cloud, dressed in the **Clever Brand Kit**, with the Clever Cloud Academy certification front and center.
 
 ---
 
 ## Deploy on Clever Cloud
 
-1. Fork this repository
-2. In the Clever Cloud console, create a new **Go** application — connect your forked repo
-3. No add-on needed
-4. No environment variables to set manually — Clever Cloud injects `PORT`, `INSTANCE_NUMBER` and the `CC_*` variables automatically
-5. Optional but recommended: wire the health check — `clever env set CC_HEALTH_CHECK_PATH /health`
-6. Push → Clever Cloud builds and deploys automatically
-
-**Build configuration:** none. The build is driven by `go.mod` (module `github.com/Vitiosum/demo-go`, `go 1.26`): Clever Cloud detects the Go runtime, compiles the module and runs the resulting binary — no Dockerfile, no image to maintain, exactly what the page claims. The instance needs Go ≥ 1.26 (the toolchain is downloaded automatically when `go.mod` asks for a newer one; otherwise set `CC_GO_VERSION`).
-
-`clevercloud/go.json` is still in the repository but is a **deprecated** mechanism according to Clever Cloud's Go documentation; it is not needed and can be deleted.
-
----
-
-## Stack
-
-| Layer      | Technology                                                              |
-|------------|-------------------------------------------------------------------------|
-| Language   | Go 1.26 (`go.mod`)                                                      |
-| Deps       | None (stdlib + `embed` only)                                            |
-| Frontend   | `static/index.html` (Go `html/template`), compiled into the binary      |
-| Fonts      | Plus Jakarta Sans, JetBrains Mono (Google Fonts, system fallback)       |
-| Design     | Clever Brand Kit (Plus Jakarta Sans, navy #13172e, dégradé Clever)      |
-
----
-
-## Features
-
-- Live dashboard refreshed every 2 seconds via JS polling on `/stats`, with a 300 ms orange flash when a metric changes (uptime ticks every second, without flashing)
-- Metrics: goroutines, heap (MB), uptime, GC cycles, request count, Go version
-- **Certification Clever Cloud** block right under the hero (two official tracks + CTA to the Academy)
-- **« Vu depuis Clever Cloud »** panel: application, App ID, instance (`INSTANCE_NUMBER` · `CC_PRETTY_INSTANCE_NAME`), instance type, deployed commit, deployment ID, host:port, runtime — shows « Local · hors Clever Cloud » when the app runs outside the platform
-- `/stats` JSON endpoint, `/health` endpoint (200 OK), `/cc-brand.css` and `/app.js` (embedded assets) — GET only (405 otherwise), unknown paths → 404
-- Security headers on every response: strict Content-Security-Policy (no inline script, Google Fonts allowed), `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options`
-- Hardened server: read/write/idle timeouts, graceful shutdown on SIGTERM (in-flight requests finish before a redeploy kills the instance)
-
----
-
-## Certification Clever Cloud
-
-The demo puts the [Clever Cloud Academy](https://academy.clever.cloud/) certification at the heart of the page: a badge, the two official tracks (**Cloud Computing Fundamentals** and **Advanced Deployment**) and a call to action. Digital badges are issued automatically once a track is validated.
-
----
-
-## Local Development
-
-### Prerequisites
-
-- Go 1.26+
-
-### Run
+1. In the Clever Cloud console, create a **Go** application (`clever create --type go demo-go`) and connect this repository
+2. No add-on needed
+3. Recommended variables (all checked against the [Go runtime doc](https://www.clever.cloud/developers/doc/deploy/applications/golang/)):
 
 ```bash
-git clone https://github.com/Vitiosum/demo-go
-cd demo-go
-go run .
-# → http://localhost:8080  (PORT=8084 go run . to pick another port)
+clever env set CC_GO_BUILD_TOOL gomod          # build the module from go.mod, no detection
+clever env set CC_HEALTH_CHECK_PATH /health    # deployment validated on /health
 ```
 
-### Check
+4. Optional demo variables (see below), then push: Clever Cloud runs `go install` on the module and starts the binary.
+
+**Why the build is short:** no external dependency (no `go.sum`, nothing to download), and `go.mod` declares `go 1.27`, which is not newer than the Go of the image (1.27.3 since the 2026-10-21 image update). The doc warns: *"If the Go version declared in your go.mod file is newer than the one installed on the instance, the Go toolchain downloads the required version automatically"* — an extra download on every build that this setting avoids. `CC_CACHE_DEPENDENCIES` brings nothing here (no module to cache) and is not needed. No dedicated build instance needed.
+
+`clevercloud/go.json` is a legacy file; the doc says that using it *"is a deprecated method and should no longer be used"*. It is kept until a deployment confirms it can be removed.
+
+---
+
+## Demo variables (environment variables tab of the console)
+
+| Variable | Default | Visible effect |
+|---|---|---|
+| `APP_ENV` | `local` | Environment pill on the control desk (Clever gradient when `production`) |
+| `ANNOUNCEMENT` | empty | Banner on top of the page when set (160 characters max) |
+| `BURST_GOROUTINES` | `500` (1..2000) | Size of the goroutine burst: button label and height of the spike |
+| `HEAP_ALERT_MB` | `32` (1..1024) | Dashed threshold on the chart; the Heap figure turns red and « Heap au-dessus de N MB » appears above it |
+
+Invalid or out-of-range values fall back to the default. Scenario: change `HEAP_ALERT_MB` to `128`, `clever restart`, reload → the 64 MB allocation no longer crosses the threshold.
+
+Platform variables shown on the desk (read-only, « injecté au déploiement » locally): `CC_APP_NAME`, `APP_ID`, `INSTANCE_NUMBER` · `CC_PRETTY_INSTANCE_NAME`, `INSTANCE_TYPE`, `COMMIT_ID`/`CC_COMMIT_ID`, `CC_DEPLOYMENT_ID`/`DEPLOYMENT_ID`. A deployment triggered by `clever restart` carries no commit: the desk says « aucun (clever restart) ».
+
+---
+
+## Bounded load generators
+
+| Route | Effect | Bound |
+|---|---|---|
+| `POST /load/goroutines` | `BURST_GOROUTINES` goroutines, each sleeping 4 to 12 s | one burst at a time (max 2000), 429 otherwise |
+| `POST /load/heap` | 64 MB allocated (pages touched), held 8 s, released, then `runtime.GC()` | one allocation at a time, fixed size |
+| `POST /load/gc` | `runtime.GC()` | one per 2 s |
+
+Worst case: 2000 sleeping goroutines plus 64 MB. No CPU loop, nothing persistent.
+
+---
+
+## Routes
+
+`GET /` (page), `GET /stats` (latest sample, uptime, page count, burst state; `?history=1` adds the last 90 samples), `GET /health`, `GET /cc-brand.css`, `GET /app.js`, the three `POST /load/*`. Other verbs → 405, other paths → 404. Security headers on every response (strict CSP: no inline script).
+
+The runtime is sampled once per second by a single goroutine (`runtime.ReadMemStats` stops the world, so it never runs per request).
+
+---
+
+## Local development
 
 ```bash
-gofmt -l . ; go vet ./... && go build -o /dev/null . && go test ./...
-curl localhost:8080/health   # OK
-curl localhost:8080/stats    # JSON
+go run .                                   # http://localhost:8080
+PORT=8104 APP_ENV=production ANNOUNCEMENT="Maintenance ce soir à 22 h" \
+  BURST_GOROUTINES=800 HEAP_ALERT_MB=40 go run .
+gofmt -l . ; go vet ./... && go test -race ./...
 ```
 
-### Known vulnerabilities (stdlib included)
-
-```bash
-go install golang.org/x/vuln/cmd/govulncheck@latest
-govulncheck ./...
-```
+Requires Go 1.27+.
 
 ---
 
 ## Project structure
 
 ```
-main.go               → HTTP server (timeouts, SIGTERM shutdown), routes, secure() middleware (CSP), platform info (CC_* env vars)
-main_test.go          → httptest smoke tests (status codes, JSON, headers)
-static/index.html     → page template (html/template): Clever Brand Kit markup
-static/app.js         → polling script for /stats (separate file: the CSP forbids inline scripts)
-static/cc-brand.css   → Clever Brand Kit stylesheet, copied as-is from the shared kit
-clevercloud/go.json   → legacy build config, deprecated by Clever Cloud (the build is driven by go.mod)
-docs/superpowers/     → design specs and implementation plans
+main.go             → HTTP server (timeouts, SIGTERM graceful shutdown), routes, CSP middleware, handlers
+pulse.go            → runtime sampler (ring of 90 samples) and bounded load generators
+config.go           → demo variables (APP_ENV, ANNOUNCEMENT, BURST_GOROUTINES, HEAP_ALERT_MB) and CC_* platform variables
+main_test.go        → httptest tests (routes, headers, demo variables, bounds)
+static/index.html   → page template (html/template), logo and badge SVG
+static/app.js       → oscilloscope drawing, polling, buttons (separate file: strict CSP)
+static/cc-brand.css → Clever Brand Kit, copied as-is (do not edit)
 ```
 
-`static/` is embedded with `//go:embed static` — the binary is self-contained, nothing to copy next to it.
-
----
-
-## Environment Variables
-
-| Variable                  | Required | Description                                                      |
-|---------------------------|----------|------------------------------------------------------------------|
-| `PORT`                    | auto     | Injected by Clever Cloud (default: 8080)                         |
-| `INSTANCE_NUMBER`         | auto     | Injected by Clever Cloud, shown in the platform panel            |
-| `CC_APP_NAME`, `APP_ID`   | auto     | Application name and ID (panel; `APP_ID` toggles « Production ») |
-| `INSTANCE_TYPE`, `CC_PRETTY_INSTANCE_NAME` | auto | Instance type and friendly name                       |
-| `COMMIT_ID` / `CC_COMMIT_ID`, `CC_DEPLOYMENT_ID` / `DEPLOYMENT_ID` | auto | Deployed commit (7 chars) and deployment ID (16 chars) — both names are tried |
-| `CC_HEALTH_CHECK_PATH`    | optional | Set to `/health` so Clever Cloud checks the app before switching traffic |
-
-No variables need to be set manually. Reference: [Clever Cloud environment variables](https://www.clever.cloud/developers/doc/reference/reference-environment-variables/).
-
-**Empty deployed commit?** Not a bug: the commit context is only attached to a deployment coming from the GitHub integration (`git push`). A deployment triggered by `clever restart` carries none — `clever activity` shows `N/A` in the commit column — and the panel shows a dash.
-
----
-
-## Deployment Notes
-
-- The app listens on `0.0.0.0:$PORT` as required by Clever Cloud
-- HTML, CSS and JS live in `static/` and are embedded at build time — no static file serving from disk
-- Only `/` counts as a request; `/stats` polling does not inflate the counter
-- Build time is fast — no external dependencies
+`static/` is embedded with `//go:embed static`: the binary is self-contained.
