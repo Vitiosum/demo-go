@@ -59,7 +59,7 @@ Runtime cible : **Go** sur Clever Cloud. Aucune base de données.
 
 **Kit :** `static/cc-brand.css`, copie **à l'identique** du kit partagé. Ne pas le modifier : les styles propres à la démo sont dans le `<style>` de `static/index.html` (préfixe `.go-`).
 **Typographie :** Plus Jakarta Sans (texte), JetBrains Mono (valeurs techniques).
-**Couleurs :** navy `#13172e`, surfaces `#1c2045`, dégradé Clever ; texte blanc sur dégradé = départ assombri `#d14836 → #cb1c42 → #a51050` (AA). Séries du graphe : goroutines `#b7b5ff`, heap `#f57461`, GC `#5fe3d3`, seuil `#ff6b81`.
+**Couleurs :** navy `#13172e`, surfaces `#1c2045`, dégradé Clever ; texte blanc sur dégradé = départ assombri `#cc4432 → #cb1c42 → #a51050` (AA). Séries du graphe : goroutines `#b7b5ff`, heap `#f57461`, GC `#5fe3d3`, seuil `#ff6b81`.
 **Structure de la page :**
 1. `.cc-topbar` — logo, « Go Runtime », pill « Go x.y · stdlib », pill live/local, « Se certifier » (ancre `#cert-title`)
 2. `.go-announce` — bandeau `ANNOUNCEMENT` (si non vide)

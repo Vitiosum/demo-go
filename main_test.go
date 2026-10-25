@@ -263,6 +263,12 @@ func TestFormatting(t *testing.T) {
 	if got := (sample{PauseUs: 61.4}).PauseText(); got != "61 µs" {
 		t.Errorf("PauseText = %q", got)
 	}
+	if got := (sample{}).PauseText(); got != "—" {
+		t.Errorf("PauseText(0) = %q", got)
+	}
+	if got := (sample{}).GCText(); got != "aucun" {
+		t.Errorf("GCText(0) = %q", got)
+	}
 	if got := (sample{PauseUs: 2300}).PauseText(); got != "2.3 ms" {
 		t.Errorf("PauseText = %q", got)
 	}

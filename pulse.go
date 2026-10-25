@@ -29,10 +29,21 @@ var pulse struct {
 
 // PauseText formats the last GC pause for the page: "61 µs" or "2.3 ms".
 func (s sample) PauseText() string {
+	if s.PauseUs == 0 {
+		return "—"
+	}
 	if s.PauseUs >= 1000 {
 		return fmt.Sprintf("%.1f ms", s.PauseUs/1000)
 	}
 	return fmt.Sprintf("%.0f µs", s.PauseUs)
+}
+
+// GCText is the GC count, or "aucun" before the first cycle.
+func (s sample) GCText() string {
+	if s.NumGC == 0 {
+		return "aucun"
+	}
+	return fmt.Sprint(s.NumGC)
 }
 
 func readSample() sample {
@@ -76,7 +87,9 @@ func latest() sample {
 }
 
 // startSampler fills the ring every second until stop is closed.
+// A single GC at start-up keeps the GC counter and pause above zero on camera.
 func startSampler(stop <-chan struct{}) {
+	runtime.GC()
 	record(readSample())
 	go func() {
 		t := time.NewTicker(time.Second)

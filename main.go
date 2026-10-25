@@ -32,7 +32,6 @@ var (
 )
 
 type pageData struct {
-	Hostname    string
 	GoVer       string
 	Arch        string
 	MaxProcs    int
@@ -142,12 +141,10 @@ func goVersion() string {
 
 func indexPage(w http.ResponseWriter, r *http.Request) {
 	requestCount.Add(1)
-	hostname, _ := os.Hostname()
 	// Render into a buffer first: a template error must yield a clean 500,
 	// not a 200 with a half-written page.
 	var buf bytes.Buffer
 	err := indexTmpl.Execute(&buf, pageData{
-		Hostname:    cut(hostname, 40),
 		GoVer:       goVersion(),
 		Arch:        runtime.GOOS + "/" + runtime.GOARCH,
 		MaxProcs:    runtime.GOMAXPROCS(0),

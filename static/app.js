@@ -30,9 +30,9 @@
     if (!samples.length) return;
     var now = samples[samples.length - 1].t;
     var x = function (t) { return W - ((now - t) / 1000) * (W / (SPAN - 1)); };
-    var gMax = 10, hMax = alertMB * 1.25;
+    var gMax = 10, hMax = 0;
     samples.forEach(function (s) { gMax = Math.max(gMax, s.g); hMax = Math.max(hMax, s.h); });
-    gMax = nice(gMax * 1.15); hMax = nice(hMax * 1.1);
+    gMax = nice(gMax * 1.15); hMax = Math.max(hMax * 1.5, alertMB * 1.1);
     var yg = function (v) { return H - 8 - (v / gMax) * (H - 40); };
     var yh = function (v) { return H - (v / hMax) * (H - 32); };
     var g = '', h = '', gc = '';
@@ -50,8 +50,8 @@
     var ya = yh(alertMB);
     $('l-alert').setAttribute('y1', ya); $('l-alert').setAttribute('y2', ya);
     $('lbl-alert').style.top = (ya / H * 100) + '%';
-    $('ax-heap').textContent = hMax + ' MB';
-    $('ax-g').textContent = gMax + ' goroutines';
+    $('ax-heap').textContent = 'max ' + Math.round(hMax) + ' MB';
+    $('ax-g').textContent = 'max ' + gMax + ' goroutines';
   }
 
   function show(d) {
@@ -60,10 +60,10 @@
     $('v-uptime').textContent = fmtUptime(baseUptime);
     $('v-g').textContent = s.g;
     $('v-heap-sub').textContent = s.h.toFixed(2);
-    $('v-gc-sub').textContent = s.gc;
+    $('v-gc-sub').textContent = s.gc ? s.gc : 'aucun';
     text('v-heap', s.h.toFixed(2));
-    $('v-gc').textContent = s.gc;
-    $('v-pause').textContent = s.p >= 1000 ? (s.p / 1000).toFixed(1) + ' ms' : Math.round(s.p) + ' µs';
+    $('v-gc').textContent = s.gc ? s.gc : 'aucun';
+    $('v-pause').textContent = !s.p ? '—' : s.p >= 1000 ? (s.p / 1000).toFixed(1) + ' ms' : Math.round(s.p) + ' µs';
     $('v-req').textContent = d.requests;
     var over = s.h > alertMB;
     $('v-heap').classList.toggle('is-over', over);
