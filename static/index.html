@@ -11,65 +11,7 @@
     </g>
     <polygon fill="#AB2B4A" points="100.423 29.134 100.423 86.868 89.721 73.062 83.76 58.003 83.756 58.003 89.418 42.731"/><polygon fill="#E87A68" points=".429 29.134 .429 86.868 9.889 73.481 17.092 58.003 17.096 58.003 9.773 43.319"/><polygon fill="#D74D4E" points="83.756 58.003 52.241 60.003 17.092 58.003 31.76 29.134 50.426 .269 70.722 31.961"/><polygon fill="#BD3246" points="100.423 29.134 83.756 58.003 50.426 .269"/><polygon fill="#F19175" points="50.426 .269 17.092 58.003 .425 29.134"/><polygon fill="#CF3942" points="83.756 58.003 72.365 82.931 50.426 115.737 27.849 81.83 17.092 58.003"/><polygon fill="#E0625B" points="50.426 115.737 .425 86.868 17.092 58.003"/><polygon fill="#9A244F" points="50.422 115.737 100.423 86.868 83.756 58.003"/>
   </g>
-</svg>{{end}}<!doctype html>
-<html lang="fr">
-<head>
-<!-- Clever Brand Kit — <head> snippet -->
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#13172e">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/cc-brand.css">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 101 116'%3E%3Cpolygon fill='%23AB2B4A' points='100.423 29.134 100.423 86.868 89.721 73.062 83.76 58.003 83.756 58.003 89.418 42.731'/%3E%3Cpolygon fill='%23E87A68' points='.429 29.134 .429 86.868 9.889 73.481 17.092 58.003 17.096 58.003 9.773 43.319'/%3E%3Cpolygon fill='%23D74D4E' points='83.756 58.003 52.241 60.003 17.092 58.003 31.76 29.134 50.426 .269 70.722 31.961'/%3E%3Cpolygon fill='%23BD3246' points='100.423 29.134 83.756 58.003 50.426 .269'/%3E%3Cpolygon fill='%23F19175' points='50.426 .269 17.092 58.003 .425 29.134'/%3E%3Cpolygon fill='%23CF3942' points='83.756 58.003 72.365 82.931 50.426 115.737 27.849 81.83 17.092 58.003'/%3E%3Cpolygon fill='%23E0625B' points='50.426 115.737 .425 86.868 17.092 58.003'/%3E%3Cpolygon fill='%239A244F' points='50.422 115.737 100.423 86.868 83.756 58.003'/%3E%3C/svg%3E">
-<title>Go Runtime · Démo Clever Cloud</title>
-<style>
-/* Styles propres à la démo Go — le reste vient de cc-brand.css (kit partagé, non modifié) */
-.go-layout { display: grid; gap: 14px; align-items: start; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); }
-.go-metrics { display: grid; gap: 14px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.go-metrics .cc-stat { font-variant-numeric: tabular-nums; }
-.go-live { display: inline-flex; align-items: center; gap: 8px; }
-.cc-hero__lead .cc-kbd, .cc-facts .cc-kbd { white-space: nowrap; }
-@media (max-width: 900px) { .go-layout { grid-template-columns: 1fr; } }
-@media (max-width: 640px) { .go-metrics { grid-template-columns: 1fr; } }
-</style>
-</head>
-<body>
-
-<header class="cc-topbar">
-  <div class="cc-container cc-topbar__inner">
-    <a href="https://www.clever.cloud" target="_blank" rel="noopener" aria-label="Clever Cloud">{{template "cc-logo"}}</a>
-    <span class="cc-topbar__sep"></span>
-    <div class="cc-topbar__demo"><small>Démo</small>Go Runtime</div>
-    <span class="cc-topbar__spacer"></span>
-    <nav class="cc-topbar__nav" aria-label="Statut">
-      <span class="cc-pill cc-pill--mono cc-hide-sm">Go {{.GoVer}} · stdlib</span>
-      {{if .CC.Live}}<span class="cc-pill cc-pill--live"><span class="cc-dot"></span>Live on Clever Cloud</span>{{else}}<span class="cc-pill cc-pill--muted"><span class="cc-dot cc-dot--muted"></span>Local · hors Clever Cloud</span>{{end}}
-      <a class="cc-pill cc-pill--gradient" href="https://academy.clever.cloud/" target="_blank" rel="noopener">Se certifier ↗</a>
-    </nav>
-  </div>
-</header>
-
-<main>
-  <section class="cc-hero">
-    <div class="cc-container">
-      <div class="cc-eyebrow cc-reveal" style="--i:0">Runtime Go · Bibliothèque standard uniquement</div>
-      <h1 class="cc-hero__title cc-reveal" style="--i:1">Go, <span class="cc-grad-text">sans dépendance, en production.</span></h1>
-      <p class="cc-hero__lead cc-reveal" style="--i:2">Un serveur HTTP écrit avec la seule bibliothèque standard, compilé par Clever Cloud à chaque <span class="cc-kbd">git push</span>. <strong>Aucun Dockerfile, aucune image à maintenir</strong> : la plateforme détecte le runtime Go, lance <span class="cc-kbd">go build</span> et sert le binaire. Les métriques ci-dessous sont celles du processus en train de vous répondre.</p>
-      <ul class="cc-facts cc-reveal" style="--i:3">
-        <li><span>Build <span class="cc-kbd">go build</span> automatique</span></li>
-        <li>Binaire statique</li>
-        <li>HTTPS et domaine inclus</li>
-        <li>Scaling horizontal</li>
-      </ul>
-    </div>
-  </section>
-
-  <section class="cc-section" style="padding-top:0">
-    <div class="cc-container">
-      <div class="cc-cert cc-reveal" style="--i:4">
-<svg class="cc-cert__badge" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 220" role="img" aria-label="Badge Certification Clever Cloud">
+</svg>{{end}}{{define "cc-badge"}}  <svg class="cc-cert__badge" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 220" role="img" aria-label="Badge Certification Clever Cloud">
   <defs>
     <linearGradient id="ccBadgeGrad" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#f57461"/><stop offset="0.5" stop-color="#cb1c42"/><stop offset="1" stop-color="#a51050"/>
@@ -88,103 +30,281 @@
   <circle cx="110" cy="158" r="10" fill="url(#ccBadgeGrad)"/>
   <path d="M105 158l3.5 3.5 6.5-6.5" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>
-        <div>
-          <div class="cc-cert__kicker">Clever Cloud Academy</div>
-          <h2 class="cc-cert__title">Devenez <span class="cc-grad-text">certifié Clever Cloud</span></h2>
-          <p class="cc-cert__text">Deux parcours officiels, de la théorie au déploiement avancé. Le badge numérique est délivré automatiquement dès la validation.</p>
-          <div class="cc-tracks">
-            <a class="cc-track" href="https://academy.clever.cloud/course/view.php?id=2" target="_blank" rel="noopener">
-              <span class="cc-track__num">01</span>
-              <span><span class="cc-track__name">Cloud Computing Fundamentals</span><br><span class="cc-track__desc">Concepts, architectures, modèles IaaS · PaaS · FaaS.</span></span>
-            </a>
-            <a class="cc-track" href="https://academy.clever.cloud/course/section.php?id=18" target="_blank" rel="noopener">
-              <span class="cc-track__num">02</span>
-              <span><span class="cc-track__name">Advanced Deployment</span><br><span class="cc-track__desc">Maîtriser le déploiement d'applications sur Clever Cloud.</span></span>
-            </a>
-          </div>
-          <div class="cc-cert__actions">
-            <a class="cc-btn cc-btn--gradient" href="https://academy.clever.cloud/" target="_blank" rel="noopener">Obtenir ma certification <span class="cc-btn__arrow">→</span></a>
-            <span class="cc-cert__note">academy.clever.cloud · développeurs, partenaires, équipes</span>
-          </div>
-        </div>
+{{end}}<!doctype html>
+<html lang="fr">
+<head>
+<!-- Clever Brand Kit — <head> snippet -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#13172e">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/cc-brand.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 101 116'%3E%3Cpolygon fill='%23AB2B4A' points='100.423 29.134 100.423 86.868 89.721 73.062 83.76 58.003 83.756 58.003 89.418 42.731'/%3E%3Cpolygon fill='%23E87A68' points='.429 29.134 .429 86.868 9.889 73.481 17.092 58.003 17.096 58.003 9.773 43.319'/%3E%3Cpolygon fill='%23D74D4E' points='83.756 58.003 52.241 60.003 17.092 58.003 31.76 29.134 50.426 .269 70.722 31.961'/%3E%3Cpolygon fill='%23BD3246' points='100.423 29.134 83.756 58.003 50.426 .269'/%3E%3Cpolygon fill='%23F19175' points='50.426 .269 17.092 58.003 .425 29.134'/%3E%3Cpolygon fill='%23CF3942' points='83.756 58.003 72.365 82.931 50.426 115.737 27.849 81.83 17.092 58.003'/%3E%3Cpolygon fill='%23E0625B' points='50.426 115.737 .425 86.868 17.092 58.003'/%3E%3Cpolygon fill='%239A244F' points='50.422 115.737 100.423 86.868 83.756 58.003'/%3E%3C/svg%3E">
+<title>Go Runtime · Démo Clever Cloud</title>
+<style>
+/* Styles propres à la démo Go (le kit cc-brand.css n'est pas modifié) */
+:root { --go-line: #b7b5ff; --go-heap: #f57461; --go-alert: #ff6b81; --go-ok: #5fe3d3; }
+html { scroll-behavior: smooth; }
+body { display: flex; flex-direction: column; min-height: 100vh; }
+main { flex: 1; }
+:focus-visible { outline: 2px solid var(--cc-orange); outline-offset: 3px; border-radius: 6px; }
+/* Départ du dégradé assombri pour que le texte blanc reste lisible (WCAG AA) */
+.cc-btn--gradient, .cc-pill--gradient { background-image: linear-gradient(90deg, #d14836 0%, #cb1c42 50%, #a51050 100%); }
+.go-mono { font-family: var(--cc-mono); font-variant-numeric: tabular-nums; }
+
+/* Bandeau ANNOUNCEMENT */
+.go-announce { background: linear-gradient(90deg, #d14836 0%, #cb1c42 50%, #a51050 100%); color: #fff; font-size: 14.5px; font-weight: 600; }
+.go-announce .cc-container { display: flex; align-items: center; gap: 12px; padding-block: 10px; }
+.go-announce code { font-family: var(--cc-mono); font-size: 11.5px; font-weight: 500; padding: 2px 8px; border-radius: 6px; background: rgba(14, 17, 36, 0.35); white-space: nowrap; }
+
+/* Premier écran : le pouls du runtime */
+.go-pulse { display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, 380px); gap: clamp(20px, 3vw, 36px); align-items: start; padding-block: clamp(28px, 4vw, 48px) 40px; }
+.go-title { margin: 0; font-size: clamp(36px, 5vw, 64px); font-weight: 800; letter-spacing: -0.04em; line-height: 1; }
+.go-title b { font-family: var(--cc-mono); font-weight: 600; letter-spacing: -0.06em; font-variant-numeric: tabular-nums; }
+.go-sub { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 14px 0 0; font-family: var(--cc-mono); font-size: 14px; color: var(--cc-muted); font-variant-numeric: tabular-nums; }
+.go-sub b { color: var(--cc-text-2); font-weight: 500; }
+.go-lead { margin: 16px 0 20px; max-width: 60ch; color: var(--cc-text-2); line-height: 1.6; }
+.go-cta { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+
+/* Oscilloscope */
+.go-scope { position: relative; margin-top: 26px; border-radius: var(--cc-radius); border: 1px solid var(--cc-border); background:
+  linear-gradient(rgba(222, 221, 238, 0.06) 1px, transparent 1px) 0 0 / 100% 25%,
+  linear-gradient(90deg, rgba(222, 221, 238, 0.045) 1px, transparent 1px) 0 0 / calc(100% / 9) 100%,
+  var(--cc-bg-deep); overflow: hidden; }
+.go-scope svg { display: block; width: 100%; height: clamp(200px, 26vh, 290px); }
+.go-scope .heap-area { fill: url(#goHeapFill); }
+.go-scope .heap-line { fill: none; stroke: var(--go-heap); stroke-width: 2; vector-effect: non-scaling-stroke; }
+.go-scope .g-line { fill: none; stroke: var(--go-line); stroke-width: 2.5; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
+.go-scope .alert-line { stroke: var(--go-alert); stroke-width: 1.5; stroke-dasharray: 6 5; vector-effect: non-scaling-stroke; }
+.go-scope .gc-tick { stroke: var(--go-ok); stroke-width: 2; vector-effect: non-scaling-stroke; }
+.go-scope__axis { position: absolute; top: 10px; font-family: var(--cc-mono); font-size: 11.5px; color: var(--cc-muted); pointer-events: none; }
+.go-scope__axis.is-left { left: 12px; } .go-scope__axis.is-right { right: 12px; color: var(--go-line); }
+.go-scope__alert { position: absolute; left: 8px; padding: 1px 6px; border-radius: 4px; background: var(--cc-bg-deep); transform: translateY(-120%); font-family: var(--cc-mono); font-size: 11.5px; color: var(--go-alert); pointer-events: none; transition: top 0.4s ease; }
+.go-legend .go-legend__span { margin-left: auto; font-size: 12.5px; }
+.go-legend .go-legend__span::before { display: none; }
+.go-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; margin-top: 12px; font-size: 13px; color: var(--cc-muted); }
+.go-legend span::before { content: ""; display: inline-block; width: 14px; height: 3px; border-radius: 2px; margin-right: 7px; vertical-align: middle; background: var(--c); }
+.go-legend .is-g { --c: var(--go-line); } .go-legend .is-h { --c: var(--go-heap); } .go-legend .is-gc { --c: var(--go-ok); }
+.go-legend .is-gc::before { width: 2px; height: 12px; }
+.go-over { font-size: 12px; font-weight: 700; color: #fff; padding: 2px 9px; border-radius: 6px; background: var(--cc-red); }
+.go-over[hidden] { display: none; }
+
+/* Chiffres sous l'oscilloscope */
+.go-figures { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0; margin: 18px 0 0; border-top: 1px solid var(--cc-border); }
+.go-figures div { padding: 12px 12px 0 0; }
+.go-figures div + div { padding-left: 14px; border-left: 1px solid var(--cc-border); }
+.go-figures dt { font-size: 12px; color: var(--cc-muted); }
+.go-figures dd { margin: 4px 0 0; font-family: var(--cc-mono); font-size: clamp(17px, 1.6vw, 22px); font-weight: 500; color: var(--cc-text); font-variant-numeric: tabular-nums; white-space: nowrap; transition: color 0.3s ease; }
+.go-figures dd small { font-size: 0.62em; color: var(--cc-muted); margin-left: 3px; }
+.go-figures dd.is-over { color: var(--go-alert); }
+
+/* Pupitre : faire réagir le runtime */
+.go-desk { background: var(--cc-surface); border: 1px solid var(--cc-border); border-radius: var(--cc-radius); box-shadow: var(--cc-shadow); overflow: hidden; }
+.go-desk__bar { display: flex; align-items: center; gap: 10px; padding: 13px 16px; border-bottom: 1px solid var(--cc-border); font-family: var(--cc-mono); font-size: 13px; color: var(--cc-text-2); }
+.go-desk__bar span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.go-env { margin-left: auto; flex: none; font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 999px; color: var(--go-ok); border: 1px solid rgba(17, 190, 169, 0.5); background: rgba(17, 190, 169, 0.12); }
+.go-env.is-production { color: #fff; border-color: transparent; background: linear-gradient(90deg, #d14836 0%, #cb1c42 50%, #a51050 100%); }
+.go-desk h2 { margin: 0; padding: 16px 16px 4px; font-size: 17px; font-weight: 700; letter-spacing: -0.01em; }
+.go-desk__hint { margin: 0; padding: 0 16px 12px; font-size: 13px; color: var(--cc-muted); }
+.go-actions { display: grid; gap: 8px; padding: 0 12px 12px; }
+.go-act { all: unset; box-sizing: border-box; cursor: pointer; display: grid; grid-template-columns: 38px minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 12px; border-radius: 12px; border: 1px solid var(--cc-border); background: rgba(14, 17, 36, 0.45); transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease; }
+.go-act:hover { border-color: var(--cc-orange); background: rgba(245, 116, 97, 0.08); }
+.go-act:active { transform: scale(0.99); }
+.go-act:focus-visible { outline: 2px solid var(--cc-orange); outline-offset: 2px; }
+.go-act[aria-disabled="true"] { cursor: progress; border-color: rgba(245, 116, 97, 0.5); }
+.go-act__icon { width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center; font-family: var(--cc-mono); font-size: 13px; font-weight: 600; color: #fff; background: linear-gradient(135deg, #d14836, #a51050); }
+.go-act.is-heap .go-act__icon { background: linear-gradient(135deg, #f57461, #cb1c42); }
+.go-act.is-gc .go-act__icon { background: linear-gradient(135deg, #11a593, #0b6f66); }
+.go-act b { display: block; font-size: 15px; color: var(--cc-text); }
+.go-act small { display: block; margin-top: 2px; font-size: 12.5px; color: var(--cc-muted); }
+.go-act__state { font-family: var(--cc-mono); font-size: 12px; color: var(--cc-orange); min-width: 3ch; text-align: right; }
+.go-toast { min-height: 20px; margin: 0; padding: 0 16px 12px; font-size: 13px; color: var(--go-ok); }
+.go-toast.is-busy { color: var(--cc-orange); }
+.go-config { list-style: none; margin: 0; padding: 14px 16px; display: grid; gap: 8px; border-top: 1px dashed var(--cc-border); font-family: var(--cc-mono); font-size: 12.5px; }
+.go-config li { display: flex; justify-content: space-between; gap: 12px; }
+.go-config span { color: var(--cc-orange); }
+.go-config b { font-weight: 500; color: var(--cc-text); text-align: right; overflow-wrap: anywhere; }
+.go-config b.is-empty, .go-vars dd.is-empty { color: var(--cc-muted); }
+.go-vars { margin: 0; padding: 14px 16px 16px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 16px; border-top: 1px dashed var(--cc-border); }
+.go-vars dt { font-size: 11.5px; color: var(--cc-muted); }
+.go-vars dd { margin: 2px 0 0; font-family: var(--cc-mono); font-size: 12.5px; color: var(--cc-text); overflow-wrap: anywhere; }
+
+/* Certification Clever Cloud Academy */
+.go-cert { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: clamp(20px, 4vw, 48px); align-items: center; margin: 8px 0 64px; scroll-margin-top: 90px; padding: clamp(24px, 4vw, 44px); border-radius: 24px; overflow: hidden; background: radial-gradient(120% 140% at 0% 0%, rgba(245, 116, 97, 0.22), transparent 55%), radial-gradient(100% 120% at 100% 100%, rgba(165, 16, 80, 0.3), transparent 60%), var(--cc-surface); border: 1px solid rgba(245, 116, 97, 0.4); }
+.go-cert .cc-cert__badge { width: clamp(132px, 18vw, 200px); height: auto; filter: drop-shadow(0 18px 40px rgba(203, 28, 66, 0.45)); animation: go-spin 40s linear infinite; }
+@keyframes go-spin { to { transform: rotate(360deg); } }
+.go-cert h2 { margin: 0; font-size: clamp(26px, 3.4vw, 40px); font-weight: 800; letter-spacing: -0.03em; line-height: 1.05; }
+.go-cert__lead { margin: 12px 0 22px; color: var(--cc-text-2); font-size: 16px; line-height: 1.6; max-width: 56ch; }
+.go-cert__tracks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 22px; }
+.go-cert__tracks a { display: block; padding: 14px 16px; border-radius: 14px; background: rgba(14, 17, 36, 0.55); border: 1px solid var(--cc-border); color: inherit; transition: border-color 0.15s ease, transform 0.15s ease; }
+.go-cert__tracks a:hover { border-color: var(--cc-orange); transform: translateY(-2px); }
+.go-cert__tracks b { display: block; color: var(--cc-text); font-size: 15px; }
+.go-cert__tracks span { display: block; margin-top: 4px; font-size: 13px; color: var(--cc-muted); }
+.go-cert__cta { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 18px; }
+.go-cert__cta small { color: var(--cc-muted); font-size: 13px; }
+
+/* Du git push au binaire */
+.go-build { margin-bottom: 72px; }
+.go-build h2 { margin: 0 0 6px; font-size: clamp(22px, 2.6vw, 30px); font-weight: 800; letter-spacing: -0.02em; }
+.go-build > p { margin: 0 0 22px; color: var(--cc-muted); max-width: 70ch; }
+.go-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; }
+.go-steps li { position: relative; padding: 18px 18px 0 0; border-top: 2px solid var(--cc-border); }
+.go-steps li::before { content: ""; position: absolute; top: -7px; left: 0; width: 12px; height: 12px; border-radius: 50%; background: var(--cc-orange); box-shadow: 0 0 0 4px var(--cc-bg); }
+.go-steps li:last-child::before { background: var(--go-ok); }
+.go-steps code { display: block; font-family: var(--cc-mono); font-size: 13.5px; color: var(--cc-text); overflow-wrap: anywhere; }
+.go-steps li > span { display: block; margin-top: 6px; font-size: 13.5px; color: var(--cc-muted); line-height: 1.5; }
+
+@media (max-width: 1080px) {
+  .go-pulse { grid-template-columns: 1fr; }
+  .go-figures { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .go-figures div:nth-child(4) { padding-left: 0; border-left: 0; }
+}
+@media (max-width: 900px) {
+  .cc-topbar__inner { flex-wrap: wrap; row-gap: 8px; padding-block: 10px; }
+  .cc-topbar__spacer { display: none; }
+  .cc-topbar__nav { width: 100%; flex-wrap: wrap; }
+  .cc-topbar__nav .cc-hide-sm { display: none !important; }
+  .go-cert { grid-template-columns: 1fr; justify-items: start; }
+  .go-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 24px; }
+}
+@media (max-width: 640px) {
+  .go-figures { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .go-figures div:nth-child(n) { padding-left: 0; border-left: 0; }
+  .go-figures div:nth-child(even) { padding-left: 14px; border-left: 1px solid var(--cc-border); }
+  .go-cert__tracks, .go-steps, .go-vars { grid-template-columns: 1fr; }
+  .go-announce .cc-container { flex-wrap: wrap; gap: 6px 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .go-cert .cc-cert__badge { animation: none; }
+  .go-scope__alert, .go-figures dd, .go-act { transition: none; }
+}
+</style>
+</head>
+<body>
+
+<header class="cc-topbar">
+  <div class="cc-container cc-topbar__inner">
+    <a href="https://www.clever.cloud" target="_blank" rel="noopener" aria-label="Clever Cloud">{{template "cc-logo"}}</a>
+    <span class="cc-topbar__sep"></span>
+    <div class="cc-topbar__demo"><small>Démo</small>Go Runtime</div>
+    <span class="cc-topbar__spacer"></span>
+    <nav class="cc-topbar__nav" aria-label="Statut">
+      <span class="cc-pill cc-pill--mono cc-hide-sm">Go {{.GoVer}} · stdlib</span>
+      {{if .CC.Live}}<span class="cc-pill cc-pill--live"><span class="cc-dot"></span>Live on Clever Cloud</span>{{else}}<span class="cc-pill cc-pill--muted"><span class="cc-dot cc-dot--muted"></span>Local · hors Clever Cloud</span>{{end}}
+      <a class="cc-pill cc-pill--gradient" href="#cert-title">Se certifier</a>
+    </nav>
+  </div>
+</header>
+{{with .Demo.Announcement}}
+<div class="go-announce" role="status"><div class="cc-container"><code>ANNOUNCEMENT</code><span>{{.}}</span></div></div>
+{{end}}
+<main>
+<div class="cc-container">
+  <section class="go-pulse" aria-labelledby="pulse-title" data-alert-mb="{{.Demo.HeapAlertMB}}">
+    <div class="cc-reveal" style="--i:0">
+      <h1 id="pulse-title" class="go-title"><b id="v-g">{{.Now.Goroutines}}</b> goroutines<br>en ce moment.</h1>
+      <p class="go-sub" aria-live="off">
+        <span>heap <b id="v-heap-sub">{{printf "%.2f" .Now.HeapMB}}</b> MB</span>
+        <span>GC n° <b id="v-gc-sub">{{.Now.NumGC}}</b></span>
+        <span>up <b id="v-uptime">{{.Uptime}}</b></span>
+        <span>{{.Arch}}</span>
+      </p>
+      <p class="go-lead">Le processus Go qui vous répond, mesuré chaque seconde par la bibliothèque standard. Clever Cloud l'a compilé depuis <span class="cc-kbd">go.mod</span> au dernier <span class="cc-kbd">git push</span>, sans Dockerfile.</p>
+      <div class="go-cta">
+        <a class="cc-btn cc-btn--gradient" href="#desk-title">Faire réagir le runtime</a>
+        <a class="cc-btn" href="#cert-title">Se certifier Clever Cloud ↓</a>
+      </div>
+
+      <div class="go-scope" role="img" aria-label="Goroutines et heap sur les 90 dernières secondes">
+        <svg viewBox="0 0 900 260" preserveAspectRatio="none" aria-hidden="true">
+          <defs>
+            <linearGradient id="goHeapFill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#f57461" stop-opacity="0.42"/><stop offset="0.6" stop-color="#cb1c42" stop-opacity="0.16"/><stop offset="1" stop-color="#a51050" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <path class="heap-area" id="p-heap-area" d=""/>
+          <path class="heap-line" id="p-heap" d=""/>
+          <line class="alert-line" id="l-alert" x1="0" x2="900" y1="0" y2="0"/>
+          <path class="gc-tick" id="p-gc" d=""/>
+          <path class="g-line" id="p-g" d=""/>
+        </svg>
+        <span class="go-scope__axis is-left" id="ax-heap">— MB</span>
+        <span class="go-scope__axis is-right" id="ax-g">— goroutines</span>
+        <span class="go-scope__alert" id="lbl-alert">HEAP_ALERT_MB · {{.Demo.HeapAlertMB}} MB</span>
+      </div>
+      <div class="go-legend">
+        <span class="is-g">goroutines</span><span class="is-h">heap (MB)</span><span class="is-gc">cycle de GC</span>
+        <em class="go-over" id="over" hidden>Heap au-dessus de {{.Demo.HeapAlertMB}} MB</em>
+        <span class="go-legend__span">90 s · 1 mesure/s</span>
+      </div>
+
+      <dl class="go-figures">
+        <div><dt>Heap</dt><dd id="v-heap">{{printf "%.2f" .Now.HeapMB}}<small>MB</small></dd></div>
+        <div><dt>Cycles de GC</dt><dd id="v-gc">{{.Now.NumGC}}</dd></div>
+        <div><dt>Pause GC</dt><dd id="v-pause">{{.Now.PauseText}}</dd></div>
+        <div><dt>GOMAXPROCS</dt><dd>{{.MaxProcs}}<small>vCPU</small></dd></div>
+        <div><dt>Pages servies</dt><dd id="v-req">—</dd></div>
+        <div><dt>Go</dt><dd>{{.GoVer}}</dd></div>
+      </dl>
+    </div>
+
+    <aside class="go-desk cc-reveal" style="--i:1" aria-labelledby="desk-title">
+      <div class="go-desk__bar"><span>{{with .CC.AppName}}{{.}}{{else}}demo-go{{end}}</span><span class="go-env{{if .Demo.IsProduction}} is-production{{end}}">{{.Demo.Env}}</span></div>
+      <h2 id="desk-title">Faire réagir le runtime</h2>
+      <p class="go-desk__hint">Charge bornée : une rafale à la fois, effacée en quelques secondes.</p>
+      <div class="go-actions">
+        <button class="go-act" type="button" data-load="goroutines"><span class="go-act__icon" aria-hidden="true">go</span><span><b>Lancer {{.Demo.Burst}} goroutines</b><small>chacune dort de 4 à 12 s</small></span><span class="go-act__state" data-state="goroutines"></span></button>
+        <button class="go-act is-heap" type="button" data-load="heap"><span class="go-act__icon" aria-hidden="true">MB</span><span><b>Allouer {{.HeapBurstMB}} MB</b><small>tenus 8 s, puis libérés par le GC</small></span><span class="go-act__state" data-state="heap"></span></button>
+        <button class="go-act is-gc" type="button" data-load="gc"><span class="go-act__icon" aria-hidden="true">GC</span><span><b>Forcer un GC</b><small><span class="go-mono">runtime.GC()</span>, au plus un toutes les 2 s</small></span><span class="go-act__state" data-state="gc"></span></button>
+      </div>
+      <p class="go-toast" id="toast" role="status" aria-live="polite"></p>
+      <ul class="go-config" aria-label="Variables d'environnement de démo lues par l'application">
+        <li><span>APP_ENV</span><b>{{.Demo.Env}}</b></li>
+        <li><span>BURST_GOROUTINES</span><b>{{.Demo.Burst}}</b></li>
+        <li><span>HEAP_ALERT_MB</span><b>{{.Demo.HeapAlertMB}}</b></li>
+        <li><span>ANNOUNCEMENT</span>{{if .Demo.Announcement}}<b>définie</b>{{else}}<b class="is-empty">non définie</b>{{end}}</li>
+      </ul>
+      <dl class="go-vars" aria-label="Variables injectées par Clever Cloud">
+        <div><dt>CC_APP_NAME</dt>{{with .CC.AppName}}<dd>{{.}}</dd>{{else}}<dd class="is-empty">injecté au déploiement</dd>{{end}}</div>
+        <div><dt>Instance</dt>{{with .CC.Instance}}<dd>{{.}}</dd>{{else}}<dd class="is-empty">injecté au déploiement</dd>{{end}}</div>
+        <div><dt>INSTANCE_TYPE</dt>{{with .CC.InstanceType}}<dd>{{.}}</dd>{{else}}<dd class="is-empty">injecté au déploiement</dd>{{end}}</div>
+        <div><dt>Commit déployé</dt>{{with .CC.Commit}}<dd>{{.}}</dd>{{else}}<dd class="is-empty">{{if $.CC.Live}}aucun (clever restart){{else}}injecté au déploiement{{end}}</dd>{{end}}</div>
+        <div><dt>CC_DEPLOYMENT_ID</dt>{{with .CC.Deployment}}<dd>{{.}}</dd>{{else}}<dd class="is-empty">injecté au déploiement</dd>{{end}}</div>
+        <div><dt>Hostname</dt><dd>{{.Hostname}}</dd></div>
+      </dl>
+    </aside>
+  </section>
+
+  <section class="go-cert" aria-labelledby="cert-title">
+{{template "cc-badge"}}
+    <div>
+      <h2 id="cert-title">Cette app tourne sur Clever Cloud. Vous aussi, certifiez-vous.</h2>
+      <p class="go-cert__lead">Deux parcours officiels de la Clever Cloud Academy, gratuits et en ligne. À la clé : un badge vérifiable à afficher sur LinkedIn.</p>
+      <div class="go-cert__tracks">
+        <a href="https://academy.clever.cloud/course/view.php?id=2" target="_blank" rel="noopener"><b>Cloud Computing Fundamentals</b><span>Concepts, architectures, IaaS, PaaS et FaaS.</span></a>
+        <a href="https://academy.clever.cloud/course/section.php?id=18" target="_blank" rel="noopener"><b>Advanced Deployment</b><span>Déployer, scaler et opérer une app comme celle-ci.</span></a>
+      </div>
+      <div class="go-cert__cta">
+        <a class="cc-btn cc-btn--gradient" href="https://academy.clever.cloud/" target="_blank" rel="noopener">Passer la certification</a>
+        <small>academy.clever.cloud</small>
       </div>
     </div>
   </section>
 
-  <section class="cc-section">
-    <div class="cc-container">
-      <div class="cc-section__head cc-reveal" style="--i:5">
-        <h2 class="cc-section__title">Métriques runtime en direct</h2>
-        <span class="cc-section__sub go-live"><span class="cc-pill cc-pill--ok" id="poll-pill"><span class="cc-dot"></span>Rafraîchi toutes les 2 s</span><span class="cc-mono">dernière lecture <span id="last-update">—</span></span></span>
-      </div>
-      <div class="go-layout">
-        <div class="go-metrics">
-          <div class="cc-card cc-card--accent cc-reveal" style="--i:6">
-            <div class="cc-card__label">Goroutines</div>
-            <div class="cc-stat" id="v-goroutines">—</div>
-            <p class="cc-card__hint">actives · <span class="cc-mono">runtime.NumGoroutine()</span></p>
-          </div>
-          <div class="cc-card cc-card--accent cc-reveal" style="--i:7">
-            <div class="cc-card__label">Heap</div>
-            <div class="cc-stat" id="s-heap"><span id="v-heap">—</span><span class="cc-stat__unit">MB</span></div>
-            <p class="cc-card__hint">alloués · <span class="cc-mono">MemStats.HeapAlloc</span></p>
-          </div>
-          <div class="cc-card cc-card--accent cc-reveal" style="--i:8">
-            <div class="cc-card__label">Uptime</div>
-            <div class="cc-stat" id="v-uptime">—</div>
-            <p class="cc-card__hint">depuis le démarrage du processus</p>
-          </div>
-          <div class="cc-card cc-card--accent cc-reveal" style="--i:9">
-            <div class="cc-card__label">GC cycles</div>
-            <div class="cc-stat" id="v-gc">—</div>
-            <p class="cc-card__hint">collections · <span class="cc-mono">MemStats.NumGC</span></p>
-          </div>
-          <div class="cc-card cc-card--accent cc-reveal" style="--i:10">
-            <div class="cc-card__label">Requêtes</div>
-            <div class="cc-stat" id="v-requests">—</div>
-            <p class="cc-card__hint">pages servies sur <span class="cc-mono">/</span> par cette instance</p>
-          </div>
-          <div class="cc-card cc-card--accent cc-reveal" style="--i:11">
-            <div class="cc-card__label">Version Go</div>
-            <div class="cc-stat" id="v-version">{{.GoVer}}</div>
-            <p class="cc-card__hint">compilé sur Clever Cloud · <span class="cc-mono">runtime.Version()</span></p>
-          </div>
-        </div>
-
-        <div class="cc-platform cc-reveal" style="--i:12">
-          <div class="cc-platform__head">
-            <h3>Vu depuis Clever Cloud</h3>
-            {{if .CC.Live}}<span class="cc-pill cc-pill--ok"><span class="cc-dot"></span>Production</span>{{else}}<span class="cc-pill cc-pill--muted"><span class="cc-dot cc-dot--muted"></span>Local · hors Clever Cloud</span>{{end}}
-          </div>
-          <dl class="cc-kv">
-            <div><dt>Application</dt><dd{{if eq .CC.AppName "—"}} class="is-empty"{{end}}>{{.CC.AppName}}</dd></div>
-            <div><dt>App ID</dt><dd{{if eq .CC.AppID "—"}} class="is-empty"{{end}}>{{.CC.AppID}}</dd></div>
-            <div><dt>Instance</dt><dd{{if eq .CC.Instance "—"}} class="is-empty"{{end}}>{{.CC.Instance}}</dd></div>
-            <div><dt>Type d'instance</dt><dd{{if eq .CC.InstanceType "—"}} class="is-empty"{{end}}>{{.CC.InstanceType}}</dd></div>
-            <div><dt>Commit déployé</dt><dd{{if eq .CC.Commit "—"}} class="is-empty"{{end}}>{{.CC.Commit}}</dd></div>
-            <div><dt>Déploiement</dt><dd{{if eq .CC.Deployment "—"}} class="is-empty"{{end}}>{{.CC.Deployment}}</dd></div>
-            <div><dt>Hôte · port</dt><dd>{{.Hostname}}:{{.Port}}</dd></div>
-            <div><dt>Runtime</dt><dd>Go {{.GoVer}} · {{.Arch}}</dd></div>
-          </dl>
-          <div class="cc-platform__foot">Variables injectées automatiquement par la plateforme : <a href="https://www.clever.cloud/developers/doc/reference/reference-environment-variables/" target="_blank" rel="noopener">référence</a>.{{if not .CC.Live}} Déployez l'app sur Clever Cloud pour les voir renseignées.{{end}}</div>
-        </div>
-      </div>
-    </div>
+  <section class="go-build" aria-labelledby="build-title">
+    <h2 id="build-title">Du git push au binaire</h2>
+    <p>Ce que la plateforme a fait pour servir cette page. Aucune dépendance externe : le build ne télécharge rien.</p>
+    <ol class="go-steps">
+      <li><code>git push clever main</code><span>Runtime Go détecté, version lue dans <span class="go-mono">go.mod</span></span></li>
+      <li><code>go install github.com/Vitiosum/demo-go</code><span>Méthode <span class="go-mono">gomod</span>, page et CSS embarqués par <span class="go-mono">embed</span></span></li>
+      <li><code>$GOPATH/bin/demo-go</code><span>Binaire lancé, écoute sur <span class="go-mono">0.0.0.0:8080</span></span></li>
+      <li><code>GET /health → 200</code><span>Trafic basculé ; SIGTERM à l'arrêt, requêtes terminées</span></li>
+    </ol>
   </section>
-
-  <section class="cc-section">
-    <div class="cc-container">
-      <div class="cc-section__head cc-reveal" style="--i:13">
-        <h2 class="cc-section__title">Ce que Clever Cloud fait pour cette app</h2>
-        <span class="cc-section__sub">Sans devops, sans Dockerfile</span>
-      </div>
-      <div class="cc-grid cc-grid--3">
-        <div class="cc-card cc-card--accent cc-reveal" style="--i:14"><div class="cc-card__label">Déploiement</div><div class="cc-card__title cc-mt-1">git push → go build → run</div><p class="cc-card__hint">Runtime Go détecté, version lue dans <span class="cc-mono">go.mod</span>, binaire compilé sur la plateforme, redémarrage sans interruption.</p></div>
-        <div class="cc-card cc-card--accent cc-reveal" style="--i:15"><div class="cc-card__label">Exploitation</div><div class="cc-card__title cc-mt-1">Scaling horizontal en un clic</div><p class="cc-card__hint">Chaque instance reçoit son <span class="cc-mono">INSTANCE_NUMBER</span> ; le panneau ci-dessus montre laquelle vous répond.</p></div>
-        <div class="cc-card cc-card--accent cc-reveal" style="--i:16"><div class="cc-card__label">Confiance</div><div class="cc-card__title cc-mt-1">Hébergé en France</div><p class="cc-card__hint">ISO 27001, HDS, hors de portée des lois extraterritoriales.</p></div>
-      </div>
-    </div>
-  </section>
+</div>
 </main>
 
 <footer class="cc-footer">
@@ -198,8 +318,8 @@
       <div>
         <h4>Documentation</h4>
         <ul>
-          <li><a href="https://www.clever.cloud/developers/doc/applications/golang/" target="_blank" rel="noopener">Runtime Go</a></li>
-          <li><a href="https://www.clever.cloud/developers/doc/reference/reference-environment-variables/" target="_blank" rel="noopener">Variables d'environnement</a></li>
+          <li><a href="https://www.clever.cloud/developers/doc/deploy/applications/golang/" target="_blank" rel="noopener">Runtime Go</a></li>
+          <li><a href="https://www.clever.cloud/developers/doc/develop/common-configuration/environment-variables/reference/" target="_blank" rel="noopener">Variables d'environnement</a></li>
           <li><a href="https://console.clever-cloud.com" target="_blank" rel="noopener">Console Clever Cloud</a></li>
         </ul>
       </div>

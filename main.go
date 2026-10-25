@@ -16,7 +16,7 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
-	"sync"
+	"strings"
 	"sync/atomic"
 	"syscall"
 	"time"
@@ -27,42 +27,40 @@ var staticFS embed.FS
 
 var (
 	startTime    = time.Now()
-	requestCount int64
+	requestCount atomic.Int64
 	indexTmpl    = template.Must(template.ParseFS(staticFS, "static/index.html"))
 )
 
-// platform is what Clever Cloud injects into the environment of a running instance.
-// Every field falls back to "—" outside the platform (Live == false).
-type platform struct {
-	Live         bool
-	AppName      string
-	AppID        string
-	Instance     string
-	InstanceType string
-	Commit       string
-	Deployment   string
-}
-
 type pageData struct {
-	Hostname string
-	Port     string
-	GoVer    string
-	Arch     string
-	CC       platform
+	Hostname    string
+	GoVer       string
+	Arch        string
+	MaxProcs    int
+	Uptime      string
+	Now         sample
+	HeapBurstMB int
+	CC          platform
+	Demo        demoConfig
 }
 
+// statsResponse is what the page polls every second on /stats.
 type statsResponse struct {
-	Goroutines int    `json:"goroutines"`
-	HeapMB     string `json:"heap_mb"`
-	GCCycles   uint32 `json:"gc_cycles"`
-	UptimeSec  int64  `json:"uptime_sec"`
-	Requests   int64  `json:"requests"`
-	GoVersion  string `json:"go_version"`
+	Now         sample   `json:"now"`
+	UptimeSec   int64    `json:"uptime_sec"`
+	Requests    int64    `json:"requests"`
+	GoVersion   string   `json:"go_version"`
+	BurstLeftMs int64    `json:"burst_left_ms"` // > 0 while a goroutine burst runs
+	HeapLeftMs  int64    `json:"heap_left_ms"`  // > 0 while the heap burst is held
+	History     []sample `json:"history,omitempty"`
 }
 
 func main() {
 	// Clever Cloud collects stdout and stderr alike; one timestamped stream is enough.
 	log.SetOutput(os.Stdout)
+
+	stopSampler := make(chan struct{})
+	defer close(stopSampler)
+	startSampler(stopSampler)
 
 	port := listenPort()
 	srv := &http.Server{
@@ -111,6 +109,9 @@ func newHandler() http.Handler {
 	mux.HandleFunc("GET /{$}", indexPage)
 	mux.HandleFunc("GET /health", healthCheck)
 	mux.HandleFunc("GET /stats", statsPage)
+	mux.HandleFunc("POST /load/goroutines", loadGoroutines)
+	mux.HandleFunc("POST /load/heap", loadHeap)
+	mux.HandleFunc("POST /load/gc", loadGC)
 	mux.HandleFunc("GET /cc-brand.css", staticFile("cc-brand.css", "text/css; charset=utf-8", "public, max-age=86400"))
 	mux.HandleFunc("GET /app.js", staticFile("app.js", "text/javascript; charset=utf-8", "public, max-age=3600"))
 	return secure(mux)
@@ -135,79 +136,26 @@ func secure(next http.Handler) http.Handler {
 	})
 }
 
-// listenPort returns the port injected by Clever Cloud, or 8080 locally.
-func listenPort() string {
-	if p := os.Getenv("PORT"); p != "" {
-		return p
-	}
-	return "8080"
-}
-
 func goVersion() string {
-	return runtime.Version()[2:] // "go1.24.0" → "1.24.0"
-}
-
-func env(k string) string { return os.Getenv(k) }
-
-// envAny returns the first non-empty value among the given variable names.
-// The deployed-commit variable is only populated when the deployment comes from
-// the GitHub integration. A deployment triggered by `clever restart` carries no
-// commit context at all (clever activity shows N/A), so the panel legitimately
-// shows a dash there. Trying several names keeps the lookup tolerant.
-func envAny(keys ...string) string {
-	for _, k := range keys {
-		if v := os.Getenv(k); v != "" {
-			return v
-		}
-	}
-	return ""
-}
-
-// cut returns s truncated to n runes (never in the middle of a UTF-8 sequence),
-// or "—" when s is empty.
-func cut(s string, n int) string {
-	if s == "" {
-		return "—"
-	}
-	if r := []rune(s); len(r) > n {
-		return string(r[:n])
-	}
-	return s
-}
-
-// platformInfo reads the variables Clever Cloud sets on each instance.
-// Reference: https://www.clever.cloud/developers/doc/reference/reference-environment-variables/
-func platformInfo() platform {
-	inst := "—"
-	if n := env("INSTANCE_NUMBER"); n != "" {
-		inst = "#" + n
-		if p := env("CC_PRETTY_INSTANCE_NAME"); p != "" {
-			inst += " · " + cut(p, 40)
-		}
-	}
-	return platform{
-		Live:         env("APP_ID") != "",
-		AppName:      cut(env("CC_APP_NAME"), 40),
-		AppID:        cut(env("APP_ID"), 40),
-		Instance:     inst,
-		InstanceType: cut(env("INSTANCE_TYPE"), 20),
-		Commit:       cut(envAny("COMMIT_ID", "CC_COMMIT_ID"), 7),
-		Deployment:   cut(envAny("CC_DEPLOYMENT_ID", "DEPLOYMENT_ID"), 16),
-	}
+	return strings.TrimPrefix(runtime.Version(), "go") // "go1.27.2" → "1.27.2"
 }
 
 func indexPage(w http.ResponseWriter, r *http.Request) {
-	atomic.AddInt64(&requestCount, 1)
+	requestCount.Add(1)
 	hostname, _ := os.Hostname()
 	// Render into a buffer first: a template error must yield a clean 500,
 	// not a 200 with a half-written page.
 	var buf bytes.Buffer
 	err := indexTmpl.Execute(&buf, pageData{
-		Hostname: hostname,
-		Port:     listenPort(),
-		GoVer:    goVersion(),
-		Arch:     runtime.GOOS + "/" + runtime.GOARCH,
-		CC:       platformInfo(),
+		Hostname:    cut(hostname, 40),
+		GoVer:       goVersion(),
+		Arch:        runtime.GOOS + "/" + runtime.GOARCH,
+		MaxProcs:    runtime.GOMAXPROCS(0),
+		Uptime:      fmtUptime(time.Since(startTime)),
+		Now:         latest(),
+		HeapBurstMB: heapBurstMB,
+		CC:          loadPlatform(os.Getenv),
+		Demo:        loadDemoConfig(os.Getenv),
 	})
 	if err != nil {
 		log.Printf("template error: %v", err)
@@ -215,45 +163,83 @@ func indexPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("Cache-Control", "no-store")
 	if _, err := buf.WriteTo(w); err != nil {
 		log.Printf("write error (/): %v", err)
 	}
 }
 
-// memSnap caches the last runtime.MemStats reading: ReadMemStats stops the world,
-// so it is refreshed at most once per second whatever the polling rate.
-var memSnap struct {
-	mu    sync.Mutex
-	at    time.Time
-	heap  uint64
-	numGC uint32
+// fmtUptime matches the format of app.js: "42s", "3m 07s", "2h 05m".
+func fmtUptime(d time.Duration) string {
+	sec := int(d.Seconds())
+	switch {
+	case sec < 60:
+		return fmt.Sprintf("%ds", sec)
+	case sec < 3600:
+		return fmt.Sprintf("%dm %02ds", sec/60, sec%60)
+	default:
+		return fmt.Sprintf("%dh %02dm", sec/3600, sec%3600/60)
+	}
 }
 
-func memStats() (heap uint64, numGC uint32) {
-	memSnap.mu.Lock()
-	defer memSnap.mu.Unlock()
-	if time.Since(memSnap.at) >= time.Second {
-		var ms runtime.MemStats
-		runtime.ReadMemStats(&ms)
-		memSnap.heap, memSnap.numGC, memSnap.at = ms.HeapAlloc, ms.NumGC, time.Now()
+func leftMs(until int64) int64 {
+	if until == 0 {
+		return 0
 	}
-	return memSnap.heap, memSnap.numGC
+	return max(until-time.Now().UnixMilli(), 1)
 }
 
 func statsPage(w http.ResponseWriter, r *http.Request) {
-	heap, numGC := memStats()
+	resp := statsResponse{
+		Now:         latest(),
+		UptimeSec:   int64(time.Since(startTime).Seconds()),
+		Requests:    requestCount.Load(),
+		GoVersion:   goVersion(),
+		BurstLeftMs: leftMs(burstUntil.Load()),
+		HeapLeftMs:  leftMs(heapUntil.Load()),
+	}
+	if r.URL.Query().Get("history") == "1" {
+		resp.History = history()
+	}
+	writeJSON(w, http.StatusOK, resp)
+}
+
+type loadResponse struct {
+	OK      bool   `json:"ok"`
+	Message string `json:"message"`
+}
+
+// answerLoad turns the result of a bounded load generator into 202 or 429.
+func answerLoad(w http.ResponseWriter, started bool, ok, busy string) {
+	if !started {
+		w.Header().Set("Retry-After", "2")
+		writeJSON(w, http.StatusTooManyRequests, loadResponse{false, busy})
+		return
+	}
+	writeJSON(w, http.StatusAccepted, loadResponse{true, ok})
+}
+
+func loadGoroutines(w http.ResponseWriter, r *http.Request) {
+	n := loadDemoConfig(os.Getenv).Burst
+	answerLoad(w, startGoroutineBurst(n),
+		fmt.Sprintf("%d goroutines lancées", n), "Une rafale tourne déjà")
+}
+
+func loadHeap(w http.ResponseWriter, r *http.Request) {
+	answerLoad(w, startHeapBurst(),
+		fmt.Sprintf("%d MB alloués pour %d s", heapBurstMB, int(heapHold.Seconds())), "Une allocation est déjà en cours")
+}
+
+func loadGC(w http.ResponseWriter, r *http.Request) {
+	answerLoad(w, forceGC(), "GC déclenché", "Un GC vient de passer")
+}
+
+func writeJSON(w http.ResponseWriter, code int, v any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Cache-Control", "no-store")
-	err := json.NewEncoder(w).Encode(statsResponse{
-		Goroutines: runtime.NumGoroutine(),
-		HeapMB:     fmt.Sprintf("%.2f", float64(heap)/1024/1024),
-		GCCycles:   numGC,
-		UptimeSec:  int64(time.Since(startTime).Seconds()),
-		Requests:   atomic.LoadInt64(&requestCount),
-		GoVersion:  goVersion(),
-	})
-	if err != nil {
-		log.Printf("encode error (/stats): %v", err)
+	w.WriteHeader(code)
+	if err := json.NewEncoder(w).Encode(v); err != nil {
+		log.Printf("encode error: %v", err)
 	}
 }
 
