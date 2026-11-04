@@ -1,4 +1,5 @@
-// Command demo-go serves a live Go runtime dashboard, built as a Clever Cloud demo.
+// Command demo-go serves a live Go runtime aquarium, built as a Clever Cloud demo:
+// one fish per goroutine, the water level is the heap, the GC is the pump.
 // Standard library only: the page template and the Clever Brand Kit stylesheet are
 // compiled into the binary with embed, so nothing has to ship next to it.
 package main
@@ -112,6 +113,8 @@ func newHandler() http.Handler {
 	mux.HandleFunc("POST /load/heap", loadHeap)
 	mux.HandleFunc("POST /load/gc", loadGC)
 	mux.HandleFunc("GET /cc-brand.css", staticFile("cc-brand.css", "text/css; charset=utf-8", "public, max-age=86400"))
+	mux.HandleFunc("GET /aquarium.css", staticFile("aquarium.css", "text/css; charset=utf-8", "public, max-age=3600"))
+	mux.HandleFunc("GET /aquarium.js", staticFile("aquarium.js", "text/javascript; charset=utf-8", "public, max-age=3600"))
 	mux.HandleFunc("GET /app.js", staticFile("app.js", "text/javascript; charset=utf-8", "public, max-age=3600"))
 	return secure(mux)
 }
@@ -240,8 +243,8 @@ func writeJSON(w http.ResponseWriter, code int, v any) {
 	}
 }
 
-// staticFile serves one file of the embedded static/ directory (brand kit
-// stylesheet, polling script) with its MIME type and cache policy.
+// staticFile serves one file of the embedded static/ directory (brand kit and
+// aquarium stylesheets, aquarium scene, polling script) with its MIME type and cache policy.
 func staticFile(name, contentType, cacheControl string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		b, err := staticFS.ReadFile("static/" + name)

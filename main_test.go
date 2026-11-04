@@ -70,7 +70,10 @@ func TestStats(t *testing.T) {
 }
 
 func TestStaticFiles(t *testing.T) {
-	for path, want := range map[string]string{"/cc-brand.css": "text/css", "/app.js": "text/javascript"} {
+	for path, want := range map[string]string{
+		"/cc-brand.css": "text/css", "/aquarium.css": "text/css",
+		"/aquarium.js": "text/javascript", "/app.js": "text/javascript",
+	} {
 		rec := do(t, http.MethodGet, path)
 		if rec.Code != http.StatusOK {
 			t.Errorf("GET %s = %d, want 200", path, rec.Code)
@@ -203,7 +206,7 @@ func TestIndexShowsDemoVariables(t *testing.T) {
 	body := do(t, http.MethodGet, "/").Body.String()
 	for _, want := range []string{
 		`class="go-announce"`, "Maintenance &lt;b&gt;ce soir&lt;/b&gt;", // escaped, never raw HTML
-		`go-env is-production`, "Lancer 750 goroutines", `data-alert-mb="48"`, "Heap au-dessus de 48 MB",
+		`go-env is-production`, "Lâcher un banc de 750<", `data-alert-mb="48"`, "Heap au-dessus de 48 MB",
 		`href="#cert-title"`, `id="cert-title"`, "https://academy.clever.cloud/course/section.php?id=18",
 	} {
 		if !strings.Contains(body, want) {
@@ -220,7 +223,8 @@ func TestIndexDefaults(t *testing.T) {
 	if strings.Contains(body, `class="go-announce"`) {
 		t.Error("no banner expected without ANNOUNCEMENT")
 	}
-	for _, want := range []string{">local<", "Lancer 500 goroutines", "injecté au déploiement", "Local · hors Clever Cloud"} {
+	for _, want := range []string{">local<", "Lâcher un banc de 500<", "injecté au déploiement", "Local · hors Clever Cloud",
+		"Running on Clever Cloud", `<canvas id="tank"`, `<script src="/aquarium.js">`} {
 		if !strings.Contains(body, want) {
 			t.Errorf("page is missing %q", want)
 		}
@@ -244,6 +248,9 @@ func TestLoadEndpointsAreBounded(t *testing.T) {
 		if rec := do(t, http.MethodGet, "/load/"+kind); rec.Code != http.StatusMethodNotAllowed {
 			t.Errorf("GET /load/%s = %d, want 405", kind, rec.Code)
 		}
+	}
+	if b := readSample().Burst; b != 50 {
+		t.Errorf("sample counts %d burst goroutines, want 50", b)
 	}
 	var s statsResponse
 	if err := json.NewDecoder(do(t, http.MethodGet, "/stats").Body).Decode(&s); err != nil {
@@ -271,5 +278,17 @@ func TestFormatting(t *testing.T) {
 	}
 	if got := (sample{PauseUs: 2300}).PauseText(); got != "2.3 ms" {
 		t.Errorf("PauseText = %q", got)
+	}
+}
+
+func TestIndexCertification(t *testing.T) {
+	body := do(t, http.MethodGet, "/").Body.String()
+	for _, want := range []string{
+		"Cette app tourne sur Clever Cloud. Vous aussi, certifiez-vous.",
+		`href="https://academy.clever.cloud/"`, `class="cc-cert__badge"`, `class="aq-porthole"`,
+	} {
+		if !strings.Contains(body, want) {
+			t.Errorf("certification block is missing %q", want)
+		}
 	}
 }

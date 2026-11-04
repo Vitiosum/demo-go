@@ -13,6 +13,7 @@ import (
 type sample struct {
 	At         int64   `json:"t"` // unix milliseconds
 	Goroutines int     `json:"g"`
+	Burst      int     `json:"b"` // goroutines of the current burst still alive (the school of fish on the page)
 	HeapMB     float64 `json:"h"`
 	NumGC      uint32  `json:"gc"`
 	PauseUs    float64 `json:"p"` // duration of the last GC pause, microseconds
@@ -52,6 +53,7 @@ func readSample() sample {
 	s := sample{
 		At:         time.Now().UnixMilli(),
 		Goroutines: runtime.NumGoroutine(),
+		Burst:      int(burstLive.Load()),
 		HeapMB:     float64(int(float64(ms.HeapAlloc)/1024/1024*100)) / 100,
 		NumGC:      ms.NumGC,
 	}
@@ -118,6 +120,7 @@ const (
 
 var (
 	burstUntil atomic.Int64 // unix ms until which a goroutine burst runs, 0 when idle
+	burstLive  atomic.Int64 // goroutines of the burst that are still sleeping
 	heapUntil  atomic.Int64 // unix ms until which the heap burst is held
 	lastGC     atomic.Int64 // unix ms of the last forced GC
 )
@@ -131,10 +134,12 @@ func startGoroutineBurst(n int) bool {
 	}
 	var wg sync.WaitGroup
 	wg.Add(n)
+	burstLive.Add(int64(n))
 	for range n {
 		life := burstMinLife + rand.N(burstMaxLife-burstMinLife)
 		go func() {
 			defer wg.Done()
+			defer burstLive.Add(-1)
 			time.Sleep(life)
 		}()
 	}

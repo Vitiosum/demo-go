@@ -1,0 +1,229 @@
+/* L'aquarium du runtime Go : styles propres à la démo (le kit cc-brand.css n'est pas modifié).
+   Un poisson par goroutine, l'eau au niveau du tas, la pompe = le GC, les bulles = ses pauses. */
+:root {
+  --aq-water-hi: #8fe3f3;
+  --aq-water: #2bb3d6;
+  --aq-water-deep: #0a4a6a;
+  --aq-coral: #f57461;
+  --aq-gold: #f2c14e;
+  --aq-brass: #c9a35b;
+  --aq-brass-hi: #efd99c;
+  --aq-brass-lo: #876629;
+  --aq-engrave: #35260b;
+  --aq-alert: #ff5a72;
+  --aq-gc: #5fe3d3;
+  --aq-steel: #23274a;
+  --aq-steel-lo: #15182f;
+  --aq-display: "Marcellus", "Plus Jakarta Sans", Georgia, serif;
+}
+html { scroll-behavior: smooth; }
+body { display: flex; flex-direction: column; min-height: 100vh; }
+body::after { display: none; } /* la grille de points du kit laisse place au carrelage du hall */
+:focus-visible { outline: 2px solid var(--cc-orange); outline-offset: 3px; border-radius: 6px; }
+.cc-btn--gradient, .cc-pill--gradient { background-image: linear-gradient(90deg, #cc4432 0%, #cb1c42 50%, #a51050 100%); }
+.cc-footer li a.is-cert { color: var(--cc-orange); background: none; -webkit-background-clip: initial; background-clip: initial; }
+.cc-footer { margin-top: 0; }
+
+/* Avis aux visiteurs (ANNOUNCEMENT) */
+.go-announce { background: linear-gradient(90deg, #cc4432 0%, #cb1c42 50%, #a51050 100%); color: #fff; font-size: 14.5px; font-weight: 600; }
+.go-announce .cc-container { display: flex; align-items: center; gap: 12px; padding-block: 10px; }
+.go-announce__tag { font-family: var(--aq-display); font-weight: 400; font-size: 15px; white-space: nowrap; }
+.go-announce code { font-family: var(--cc-mono); font-size: 11.5px; font-weight: 500; padding: 2px 8px; border-radius: 6px; background: rgba(14, 17, 36, 0.35); white-space: nowrap; }
+
+/* Le hall : mur carrelé, éclairé par le bassin */
+.aq-hall { flex: 1; position: relative; z-index: 0; overflow-x: clip; padding-bottom: clamp(48px, 7vw, 88px);
+  background:
+    linear-gradient(rgba(222, 221, 238, 0.035) 1px, transparent 1px) 0 0 / 64px 32px,
+    linear-gradient(90deg, rgba(222, 221, 238, 0.03) 1px, transparent 1px) 0 0 / 64px 32px; }
+
+/* En-tête de la scène */
+.aq-intro { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 12px clamp(24px, 4vw, 56px); align-items: end; padding-top: clamp(24px, 3.4vw, 40px); }
+.aq-title { margin: 0; font-family: var(--aq-display); font-weight: 400; font-size: clamp(34px, 4vw, 54px); line-height: 1.04; letter-spacing: -0.01em; color: #f4fbfd; text-wrap: balance; }
+.aq-title__n { font-variant-numeric: tabular-nums lining-nums; }
+.aq-lead { margin: 0; max-width: 58ch; color: var(--cc-text-2); font-size: 15.5px; line-height: 1.6; }
+.aq-lead a { color: var(--aq-water-hi); border-bottom: 1px solid rgba(143, 227, 243, 0.4); white-space: nowrap; }
+.aq-lead a:hover { color: #fff; border-color: #fff; }
+
+/* Le bassin */
+.aq-aquarium { position: relative; margin-top: clamp(18px, 2.4vw, 26px); }
+.aq-aquarium::before { content: ""; position: absolute; z-index: -1; left: -6%; right: -6%; top: -40px; height: 74%; pointer-events: none;
+  background: radial-gradient(closest-side, rgba(43, 179, 214, 0.26), rgba(43, 179, 214, 0.08) 60%, transparent); }
+.aq-hood { display: flex; align-items: center; gap: 12px; padding: 9px 16px; border-radius: 14px 14px 0 0;
+  background: linear-gradient(180deg, #30355c, var(--aq-steel)); border: 1px solid rgba(222, 221, 238, 0.1); border-bottom: 3px solid var(--aq-brass); }
+.aq-hood__plate { font-family: var(--aq-display); font-size: 17px; color: var(--aq-brass-hi); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.aq-hood__plate b { font-weight: 400; color: #fff; }
+.aq-hood__key { margin-left: auto; font-size: 13px; color: var(--cc-muted); white-space: nowrap; }
+.go-env { flex: none; font-family: var(--cc-mono); font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 999px; color: var(--aq-gc); border: 1px solid rgba(17, 190, 169, 0.5); background: rgba(17, 190, 169, 0.12); }
+.go-env.is-production { color: #fff; border-color: transparent; background: linear-gradient(90deg, #cc4432 0%, #cb1c42 50%, #a51050 100%); }
+
+.aq-tank { position: relative; height: clamp(300px, 43vh, 420px); background: #0b1530; border-inline: 7px solid var(--aq-steel); box-shadow: inset 0 0 0 1px rgba(143, 227, 243, 0.25); }
+.aq-tank canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.aq-tank::after { content: ""; position: absolute; inset: 0; pointer-events: none; /* reflet de la vitre */
+  background: linear-gradient(115deg, transparent 18%, rgba(255, 255, 255, 0.07) 22%, transparent 30%, transparent 64%, rgba(255, 255, 255, 0.045) 67%, transparent 72%); }
+.aq-over { position: absolute; z-index: 1; top: 12px; left: 50%; transform: translateX(-50%); white-space: nowrap; font-style: normal; font-size: 12.5px; font-weight: 700; color: #fff; padding: 4px 10px; border-radius: 6px; background: #d0213f; box-shadow: 0 4px 14px rgba(208, 33, 63, 0.45); }
+.aq-over[hidden] { display: none; }
+
+/* Le meuble du bassin : plaque, pupitre, relevé */
+.aq-stand { display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr) minmax(0, 0.95fr); gap: clamp(14px, 2vw, 22px); padding: clamp(14px, 2vw, 20px);
+  background: linear-gradient(180deg, #20244a, #171a36); border: 1px solid rgba(222, 221, 238, 0.08); border-top: 7px solid var(--aq-steel-lo); border-radius: 0 0 14px 14px; box-shadow: var(--cc-shadow); }
+
+/* Plaque en laiton gravé */
+.aq-plaque { position: relative; padding: 14px 18px 12px; border-radius: 6px; color: var(--aq-engrave);
+  background: linear-gradient(135deg, #e9d295 0%, #c9a35b 34%, #ead59c 52%, #c19a50 74%, #a9853f 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), inset 0 -2px 0 rgba(0, 0, 0, 0.22), 0 8px 18px rgba(0, 0, 0, 0.35); }
+.aq-plaque::before { content: ""; position: absolute; inset: 0; pointer-events: none; border-radius: inherit;
+  background:
+    radial-gradient(circle at 9px 9px, #6b4f1d 0 1.6px, #f6e7b6 2.2px 3px, transparent 3.6px),
+    radial-gradient(circle at calc(100% - 9px) 9px, #6b4f1d 0 1.6px, #f6e7b6 2.2px 3px, transparent 3.6px),
+    radial-gradient(circle at 9px calc(100% - 9px), #6b4f1d 0 1.6px, #f6e7b6 2.2px 3px, transparent 3.6px),
+    radial-gradient(circle at calc(100% - 9px) calc(100% - 9px), #6b4f1d 0 1.6px, #f6e7b6 2.2px 3px, transparent 3.6px); }
+.aq-plaque h2 { margin: 0 0 6px; font-family: var(--aq-display); font-weight: 400; font-size: 18px; text-shadow: 0 1px 0 rgba(255, 255, 255, 0.45); }
+.aq-plaque dl { margin: 0; }
+.aq-read { display: grid; grid-template-columns: 24px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 7px 0; border-top: 1px solid rgba(53, 38, 11, 0.24); }
+.aq-read svg { width: 24px; height: 24px; color: var(--aq-engrave); }
+.aq-read dt { font-family: var(--aq-display); font-size: 15.5px; line-height: 1.15; text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4); }
+.aq-read dt small { display: block; font-family: var(--cc-font); font-size: 12px; font-weight: 600; opacity: 0.78; text-shadow: none; }
+.aq-read dd { margin: 0; min-width: 6.4ch; padding: 3px 9px; border-radius: 4px; text-align: right; white-space: nowrap;
+  font-family: var(--cc-mono); font-size: clamp(16px, 1.5vw, 19px); font-weight: 500; font-variant-numeric: tabular-nums; color: #f8f1df;
+  background: #1d150a; box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.7), 0 1px 0 rgba(255, 255, 255, 0.45); transition: color 0.3s ease; }
+.aq-read dd small { font-size: 0.62em; color: #cdbf9c; margin-left: 3px; }
+.aq-read dd.is-over { color: #ff8fa0; }
+.aq-plaque__foot { margin: 8px 0 0; padding-top: 8px; border-top: 1px solid rgba(53, 38, 11, 0.24); font-size: 12.5px; line-height: 1.5; font-weight: 500; }
+.aq-plaque__foot b { font-weight: 700; font-variant-numeric: tabular-nums; }
+
+/* Pupitre du soigneur */
+.aq-desk h2 { margin: 0; font-family: var(--aq-display); font-weight: 400; font-size: 19px; color: var(--aq-brass-hi); }
+.aq-desk__hint { margin: 2px 0 10px; font-size: 13px; color: var(--cc-muted); }
+.aq-actions { display: grid; gap: 6px; }
+.aq-btn { all: unset; box-sizing: border-box; cursor: pointer; display: grid; grid-template-columns: 46px minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 8px 10px 8px 8px; border-radius: 12px; border: 1px solid transparent; transition: background 0.15s ease, border-color 0.15s ease; }
+.aq-btn:hover { background: rgba(222, 221, 238, 0.05); border-color: rgba(201, 163, 91, 0.35); }
+.aq-btn:focus-visible { outline: 2px solid var(--cc-orange); outline-offset: 2px; }
+.aq-btn__cap { --c: var(--aq-coral); --c-lo: #8f2b1e; width: 42px; height: 42px; margin: 2px; border-radius: 50%; display: grid; place-items: center; color: #fff;
+  background: radial-gradient(circle at 34% 28%, rgba(255, 255, 255, 0.55), transparent 32%), radial-gradient(circle at 50% 55%, var(--c) 0 58%, var(--c-lo) 100%);
+  box-shadow: 0 0 0 3px #b8914a, 0 0 0 4px #4d3a15, 0 4px 0 4px rgba(0, 0, 0, 0.35); transition: transform 0.1s ease, box-shadow 0.1s ease; }
+.aq-btn__cap svg { width: 22px; height: 22px; filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.35)); }
+.aq-btn:active .aq-btn__cap { transform: translateY(2px); box-shadow: 0 0 0 3px #b8914a, 0 0 0 4px #4d3a15, 0 2px 0 4px rgba(0, 0, 0, 0.35); }
+.aq-btn.is-heap .aq-btn__cap { --c: #2bb3d6; --c-lo: #0b4a6a; }
+.aq-btn.is-gc .aq-btn__cap { --c: #17a493; --c-lo: #0b5c53; }
+.aq-btn b { display: block; font-size: 14.5px; font-weight: 700; line-height: 1.3; color: var(--cc-text); }
+.aq-btn small { display: block; margin-top: 1px; font-size: 12.5px; color: var(--cc-muted); line-height: 1.4; }
+.aq-btn code { font-family: var(--cc-mono); font-size: 0.95em; color: var(--cc-text-2); }
+.aq-btn[aria-disabled="true"] { cursor: progress; border-color: rgba(201, 163, 91, 0.45); background: rgba(201, 163, 91, 0.07); }
+.aq-btn__state { font-family: var(--cc-mono); font-size: 12px; color: var(--aq-brass-hi); min-width: 3ch; text-align: right; font-variant-numeric: tabular-nums; }
+.aq-toast { min-height: 20px; margin: 8px 0 0; padding-left: 10px; font-size: 13px; color: var(--aq-gc); }
+.aq-toast.is-busy { color: var(--cc-orange); }
+
+/* Relevé des 90 dernières secondes */
+.aq-log { margin: 0; display: flex; flex-direction: column; min-width: 0; }
+.aq-log figcaption { font-family: var(--aq-display); font-size: 17px; color: var(--aq-brass-hi); }
+.aq-log figcaption small { display: block; font-family: var(--cc-font); font-size: 12.5px; color: var(--cc-muted); }
+.aq-log__plot { position: relative; flex: 1; min-height: 150px; margin-top: 10px; border-radius: 8px; border: 1px solid rgba(222, 221, 238, 0.12);
+  background: linear-gradient(rgba(222, 221, 238, 0.06) 1px, transparent 1px) 0 0 / 100% 25%, var(--cc-bg-deep); overflow: hidden; }
+.aq-log__plot svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.aq-log .heap-area { fill: rgba(43, 179, 214, 0.28); }
+.aq-log .heap-line { fill: none; stroke: var(--aq-water); stroke-width: 2; vector-effect: non-scaling-stroke; }
+.aq-log .g-line { fill: none; stroke: var(--aq-coral); stroke-width: 2; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
+.aq-log .gc-tick { stroke: var(--aq-gc); stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+.aq-log .alert-line { stroke: var(--aq-alert); stroke-width: 1.2; stroke-dasharray: 5 4; vector-effect: non-scaling-stroke; }
+.aq-log__axis { position: absolute; top: 6px; font-family: var(--cc-mono); font-size: 11px; color: var(--cc-muted); pointer-events: none; }
+.aq-log__axis.is-left { left: 8px; color: var(--aq-water-hi); } .aq-log__axis.is-right { right: 8px; color: #ffa594; }
+.aq-log__key { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 8px 0 0; font-size: 12.5px; color: var(--cc-muted); }
+.aq-log__key span::before { content: ""; display: inline-block; width: 12px; height: 3px; border-radius: 2px; margin-right: 6px; vertical-align: middle; background: var(--c); }
+.aq-log__key .is-g { --c: var(--aq-coral); } .aq-log__key .is-h { --c: var(--aq-water); } .aq-log__key .is-gc { --c: var(--aq-gc); }
+.aq-log__key .is-gc::before { width: 2px; height: 11px; }
+
+/* Étiquettes émaillées : réglages du bassin et Running on Clever Cloud */
+.aq-tags { display: grid; grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr); gap: clamp(14px, 2vw, 22px); margin-top: clamp(22px, 3vw, 32px); }
+.aq-tag { position: relative; padding: 18px 20px 16px; border-radius: 10px; background: var(--cc-surface); border: 1px solid rgba(201, 163, 91, 0.32); }
+.aq-tag::before { content: ""; position: absolute; inset: 0; pointer-events: none; border-radius: inherit;
+  background:
+    radial-gradient(circle at 10px 10px, #e6cf8e 0 2.6px, transparent 3.2px),
+    radial-gradient(circle at calc(100% - 10px) 10px, #e6cf8e 0 2.6px, transparent 3.2px),
+    radial-gradient(circle at 10px calc(100% - 10px), #e6cf8e 0 2.6px, transparent 3.2px),
+    radial-gradient(circle at calc(100% - 10px) calc(100% - 10px), #e6cf8e 0 2.6px, transparent 3.2px); opacity: 0.8; }
+.aq-tag__head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.aq-tag h2 { margin: 0; font-family: var(--aq-display); font-weight: 400; font-size: 19px; color: var(--aq-brass-hi); }
+.aq-tag__head .cc-pill { margin-left: auto; }
+.aq-tag > p { margin: 2px 0 12px; font-size: 13px; color: var(--cc-muted); }
+.aq-vars { list-style: none; margin: 0; padding: 0; display: grid; gap: 7px; font-size: 13px; }
+.aq-vars li { display: flex; justify-content: space-between; gap: 12px; padding-bottom: 6px; border-bottom: 1px dashed rgba(222, 221, 238, 0.12); }
+.aq-vars li:last-child { border-bottom: 0; padding-bottom: 0; }
+.aq-vars code { font-family: var(--cc-mono); color: var(--cc-orange); }
+.aq-vars b { font-family: var(--cc-mono); font-weight: 500; color: var(--cc-text); text-align: right; overflow-wrap: anywhere; }
+.aq-vars b.is-empty, .aq-cc dd.is-empty { color: var(--cc-muted); }
+.aq-cc { margin: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 18px; }
+.aq-cc dt { font-size: 12px; color: var(--cc-muted); }
+.aq-cc dd { margin: 2px 0 0; font-family: var(--cc-mono); font-size: 13px; color: var(--cc-text); overflow-wrap: anywhere; }
+
+/* Le hublot de la certification */
+.aq-cert { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: clamp(22px, 4vw, 56px); align-items: center; margin-top: clamp(40px, 6vw, 72px); scroll-margin-top: 90px; }
+.aq-porthole { position: relative; width: clamp(190px, 22vw, 268px); aspect-ratio: 1; padding: clamp(14px, 1.6vw, 20px); border-radius: 50%;
+  background: conic-gradient(from 30deg, #f0dba0, #8a6a2c 14%, #e4cb88 28%, #9d7b36 46%, #efd99c 60%, #7d5f26 78%, #e9d295 92%, #f0dba0);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 0, 0, 0.45), inset 0 0 0 1px rgba(255, 255, 255, 0.35); }
+.aq-porthole::before { content: ""; position: absolute; inset: 0; border-radius: 50%; pointer-events: none;
+  --b: #5a4318 0 1.8px, #f6e7b6 2.4px 3.4px, transparent 4px;
+  background:
+    radial-gradient(circle at 50% 4%, var(--b)), radial-gradient(circle at 50% 96%, var(--b)),
+    radial-gradient(circle at 4% 50%, var(--b)), radial-gradient(circle at 96% 50%, var(--b)),
+    radial-gradient(circle at 17.5% 17.5%, var(--b)), radial-gradient(circle at 82.5% 17.5%, var(--b)),
+    radial-gradient(circle at 17.5% 82.5%, var(--b)), radial-gradient(circle at 82.5% 82.5%, var(--b)); }
+.aq-porthole__glass { position: relative; width: 100%; height: 100%; border-radius: 50%; overflow: hidden; display: grid; place-items: center;
+  background: radial-gradient(circle at 50% 28%, #8fe3f3, #2bb3d6 46%, #0a4a6a 100%);
+  box-shadow: inset 0 0 0 5px rgba(0, 0, 0, 0.35), inset 0 14px 36px rgba(255, 255, 255, 0.22); }
+.aq-porthole__glass::after { content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(circle at 22% 70%, rgba(255, 255, 255, 0.55) 0 3px, transparent 4px), radial-gradient(circle at 27% 58%, rgba(255, 255, 255, 0.45) 0 2px, transparent 3px), radial-gradient(circle at 74% 30%, rgba(255, 255, 255, 0.5) 0 2.5px, transparent 3.5px), radial-gradient(circle at 80% 22%, rgba(255, 255, 255, 0.4) 0 1.6px, transparent 2.6px), linear-gradient(130deg, transparent 30%, rgba(255, 255, 255, 0.16) 36%, transparent 44%); }
+.aq-porthole .cc-cert__badge { width: 80%; height: auto; margin: 0; filter: drop-shadow(0 10px 18px rgba(4, 22, 40, 0.55)); animation: aq-spin 60s linear infinite; }
+@keyframes aq-spin { to { transform: rotate(360deg); } }
+.aq-cert h2 { margin: 0; font-family: var(--aq-display); font-weight: 400; font-size: clamp(28px, 3.4vw, 42px); line-height: 1.1; letter-spacing: -0.005em; color: #f4fbfd; max-width: 22ch; }
+.aq-cert__lead { margin: 12px 0 20px; color: var(--cc-text-2); font-size: 16px; line-height: 1.6; max-width: 58ch; }
+.aq-cert__tracks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 20px; }
+.aq-cert__tracks a { display: block; padding: 13px 16px; border-radius: 10px; background: rgba(14, 17, 36, 0.6); border: 1px solid rgba(201, 163, 91, 0.3); color: inherit; transition: border-color 0.15s ease; }
+.aq-cert__tracks a:hover { border-color: var(--aq-brass-hi); }
+.aq-cert__tracks b { display: block; color: var(--cc-text); font-size: 15px; }
+.aq-cert__tracks span { display: block; margin-top: 3px; font-size: 13px; color: var(--cc-muted); }
+.aq-cert__cta { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; }
+.aq-cert__cta small { color: var(--cc-muted); font-size: 13px; }
+
+/* Comment le bassin a été rempli : une canalisation, quatre vannes */
+.aq-build { margin-top: clamp(44px, 6vw, 72px); }
+.aq-build h2 { margin: 0 0 4px; font-family: var(--aq-display); font-weight: 400; font-size: clamp(24px, 2.6vw, 30px); color: #f4fbfd; }
+.aq-build > p { margin: 0 0 24px; color: var(--cc-muted); max-width: 70ch; }
+.aq-pipe { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.aq-pipe li { position: relative; padding: 26px 18px 0 0; }
+.aq-pipe li::before { content: ""; position: absolute; top: 6px; left: 0; right: 0; height: 6px; border-radius: 3px; background: linear-gradient(180deg, #4a5080, #262b52 60%, #1a1e3d); }
+.aq-pipe li::after { content: ""; position: absolute; top: 0; left: 0; width: 18px; height: 18px; border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #f6e7b6, #c9a35b 55%, #6b4f1d); box-shadow: 0 0 0 3px var(--cc-bg); }
+.aq-pipe code { display: block; font-family: var(--cc-mono); font-size: 13.5px; color: var(--cc-text); overflow-wrap: anywhere; }
+.aq-pipe li > span { display: block; margin-top: 6px; font-size: 13.5px; color: var(--cc-muted); line-height: 1.5; }
+
+@media (max-width: 1040px) {
+  .aq-stand { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .aq-log { grid-column: 1 / -1; }
+  .aq-log__plot { min-height: 140px; }
+}
+@media (max-width: 900px) {
+  .cc-topbar__inner { flex-wrap: wrap; row-gap: 8px; padding-block: 10px; }
+  .cc-topbar__spacer { display: none; }
+  .cc-topbar__nav { width: 100%; flex-wrap: wrap; }
+  .cc-topbar__nav .cc-hide-sm { display: none !important; }
+  .aq-intro { grid-template-columns: 1fr; }
+  .aq-tags { grid-template-columns: 1fr; }
+  .aq-cert { grid-template-columns: 1fr; justify-items: start; }
+  .aq-pipe { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 26px; }
+}
+@media (max-width: 640px) {
+  .aq-hood { flex-wrap: wrap; row-gap: 4px; padding: 8px 12px; }
+  .aq-hood__key { margin-left: 0; width: 100%; }
+  .aq-tank { height: 300px; border-inline-width: 5px; }
+  .aq-lead { font-size: 15px; }
+  .aq-stand { grid-template-columns: 1fr; padding: 12px; }
+  .aq-cc { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .aq-cert__tracks { grid-template-columns: 1fr; }
+  .aq-pipe { grid-template-columns: 1fr; }
+  .go-announce .cc-container { flex-wrap: wrap; gap: 6px 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .aq-porthole .cc-cert__badge { animation: none; }
+  .aq-read dd, .aq-btn, .aq-btn__cap { transition: none; }
+}

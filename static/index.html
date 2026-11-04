@@ -37,152 +37,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#13172e">
+<meta name="description" content="L'aquarium du runtime Go : une goroutine par poisson, l'eau au niveau du tas, la pompe du GC et ses bulles, en direct depuis Clever Cloud.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&family=JetBrains+Mono:wght@400;500;600&family=Marcellus&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/cc-brand.css">
+<link rel="stylesheet" href="/aquarium.css">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 101 116'%3E%3Cpolygon fill='%23AB2B4A' points='100.423 29.134 100.423 86.868 89.721 73.062 83.76 58.003 83.756 58.003 89.418 42.731'/%3E%3Cpolygon fill='%23E87A68' points='.429 29.134 .429 86.868 9.889 73.481 17.092 58.003 17.096 58.003 9.773 43.319'/%3E%3Cpolygon fill='%23D74D4E' points='83.756 58.003 52.241 60.003 17.092 58.003 31.76 29.134 50.426 .269 70.722 31.961'/%3E%3Cpolygon fill='%23BD3246' points='100.423 29.134 83.756 58.003 50.426 .269'/%3E%3Cpolygon fill='%23F19175' points='50.426 .269 17.092 58.003 .425 29.134'/%3E%3Cpolygon fill='%23CF3942' points='83.756 58.003 72.365 82.931 50.426 115.737 27.849 81.83 17.092 58.003'/%3E%3Cpolygon fill='%23E0625B' points='50.426 115.737 .425 86.868 17.092 58.003'/%3E%3Cpolygon fill='%239A244F' points='50.422 115.737 100.423 86.868 83.756 58.003'/%3E%3C/svg%3E">
-<title>Go Runtime · Démo Clever Cloud</title>
-<style>
-/* Styles propres à la démo Go (le kit cc-brand.css n'est pas modifié) */
-:root { --go-line: #b7b5ff; --go-heap: #f57461; --go-alert: #ff6b81; --go-ok: #5fe3d3; }
-html { scroll-behavior: smooth; }
-body { display: flex; flex-direction: column; min-height: 100vh; }
-main { flex: 1; }
-:focus-visible { outline: 2px solid var(--cc-orange); outline-offset: 3px; border-radius: 6px; }
-/* Départ du dégradé assombri pour que le texte blanc reste lisible (WCAG AA) */
-.cc-btn--gradient, .cc-pill--gradient { background-image: linear-gradient(90deg, #cc4432 0%, #cb1c42 50%, #a51050 100%); }
-.go-mono { font-family: var(--cc-mono); font-variant-numeric: tabular-nums; }
-
-/* Lien certification du pied de page : orange plein (contraste), sans texte en dégradé */
-.cc-footer li a.is-cert { color: var(--cc-orange); background: none; -webkit-background-clip: initial; background-clip: initial; }
-.cc-topbar__demo small { font-size: 11px; }
-
-/* Bandeau ANNOUNCEMENT */
-.go-announce { background: linear-gradient(90deg, #cc4432 0%, #cb1c42 50%, #a51050 100%); color: #fff; font-size: 14.5px; font-weight: 600; }
-.go-announce .cc-container { display: flex; align-items: center; gap: 12px; padding-block: 10px; }
-.go-announce code { font-family: var(--cc-mono); font-size: 11.5px; font-weight: 500; padding: 2px 8px; border-radius: 6px; background: rgba(14, 17, 36, 0.35); white-space: nowrap; }
-
-/* Premier écran : le pouls du runtime */
-.go-pulse { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: clamp(20px, 3vw, 36px); align-items: start; padding-block: clamp(28px, 4vw, 48px) 40px; }
-.go-title { margin: 0; font-size: clamp(36px, 5vw, 64px); font-weight: 800; letter-spacing: -0.04em; line-height: 1; }
-.go-title b { font-family: var(--cc-mono); font-weight: 600; letter-spacing: -0.06em; font-variant-numeric: tabular-nums; }
-.go-sub { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 14px 0 0; font-family: var(--cc-mono); font-size: 14px; color: var(--cc-muted); font-variant-numeric: tabular-nums; }
-.go-sub b { color: var(--cc-text-2); font-weight: 500; }
-.go-lead { margin: 16px 0 20px; max-width: 60ch; color: var(--cc-text-2); line-height: 1.6; }
-.go-cta { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
-
-/* Oscilloscope */
-.go-scope { position: relative; margin-top: 26px; border-radius: var(--cc-radius); border: 1px solid var(--cc-border); background:
-  linear-gradient(rgba(222, 221, 238, 0.06) 1px, transparent 1px) 0 0 / 100% 25%,
-  linear-gradient(90deg, rgba(222, 221, 238, 0.045) 1px, transparent 1px) 0 0 / calc(100% / 9) 100%,
-  var(--cc-bg-deep); overflow: hidden; }
-.go-scope svg { display: block; width: 100%; height: clamp(200px, 26vh, 290px); }
-.go-scope .heap-area { fill: url(#goHeapFill); }
-.go-scope .heap-line { fill: none; stroke: var(--go-heap); stroke-width: 2.5; vector-effect: non-scaling-stroke; }
-.go-scope .g-line { fill: none; stroke: var(--go-line); stroke-width: 2.5; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
-.go-scope .alert-line { stroke: var(--go-alert); stroke-width: 1.5; stroke-dasharray: 6 5; vector-effect: non-scaling-stroke; }
-.go-scope .gc-tick { stroke: var(--go-ok); stroke-width: 2; vector-effect: non-scaling-stroke; }
-.go-scope__axis { position: absolute; top: 10px; font-family: var(--cc-mono); font-size: 11.5px; color: var(--cc-muted); pointer-events: none; }
-.go-scope__axis.is-left { left: 12px; } .go-scope__axis.is-right { right: 12px; color: var(--go-line); }
-.go-scope__alert { position: absolute; left: 8px; padding: 1px 6px; border-radius: 4px; background: var(--cc-bg-deep); transform: translateY(-120%); font-family: var(--cc-mono); font-size: 11.5px; color: var(--go-alert); pointer-events: none; transition: top 0.4s ease; }
-.go-legend .go-legend__span { margin-left: auto; font-size: 12.5px; }
-.go-legend .go-legend__span::before { display: none; }
-.go-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; margin-top: 12px; font-size: 13px; color: var(--cc-muted); }
-.go-legend span::before { content: ""; display: inline-block; width: 14px; height: 3px; border-radius: 2px; margin-right: 7px; vertical-align: middle; background: var(--c); }
-.go-legend .is-g { --c: var(--go-line); } .go-legend .is-h { --c: var(--go-heap); } .go-legend .is-gc { --c: var(--go-ok); }
-.go-legend .is-gc::before { width: 2px; height: 12px; }
-.go-over { font-size: 12px; font-weight: 700; color: #fff; padding: 2px 9px; border-radius: 6px; background: var(--cc-red); }
-.go-over[hidden] { display: none; }
-
-/* Chiffres sous l'oscilloscope */
-.go-figures { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; margin: 18px 0 0; border-top: 1px solid var(--cc-border); }
-.go-figures div { padding: 12px 12px 4px 14px; border-left: 1px solid var(--cc-border); }
-.go-figures div:nth-child(3n+1) { padding-left: 0; border-left: 0; }
-.go-figures dt { font-size: 12px; color: var(--cc-muted); }
-.go-figures dd { margin: 4px 0 0; font-family: var(--cc-mono); font-size: clamp(17px, 1.6vw, 22px); font-weight: 500; color: var(--cc-text); font-variant-numeric: tabular-nums; white-space: nowrap; transition: color 0.3s ease; }
-.go-figures dd small { font-size: 0.62em; color: var(--cc-muted); margin-left: 3px; }
-.go-figures dd.is-over { color: var(--go-alert); }
-
-/* Pupitre : faire réagir le runtime */
-.go-desk { background: var(--cc-surface); border: 1px solid var(--cc-border); border-radius: var(--cc-radius); box-shadow: var(--cc-shadow); overflow: hidden; }
-.go-desk__bar { display: flex; align-items: center; gap: 10px; padding: 13px 16px; border-bottom: 1px solid var(--cc-border); font-family: var(--cc-mono); font-size: 13px; color: var(--cc-text-2); }
-.go-desk__bar span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.go-env { margin-left: auto; flex: none; font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 999px; color: var(--go-ok); border: 1px solid rgba(17, 190, 169, 0.5); background: rgba(17, 190, 169, 0.12); }
-.go-env.is-production { color: #fff; border-color: transparent; background: linear-gradient(90deg, #cc4432 0%, #cb1c42 50%, #a51050 100%); }
-.go-desk h2 { margin: 0; padding: 16px 16px 4px; font-size: 17px; font-weight: 700; letter-spacing: -0.01em; }
-.go-desk__hint { margin: 0; padding: 0 16px 12px; font-size: 13px; color: var(--cc-muted); }
-.go-actions { display: grid; gap: 8px; padding: 0 12px 12px; }
-.go-act { all: unset; box-sizing: border-box; cursor: pointer; display: grid; grid-template-columns: 38px minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 12px; border-radius: 12px; border: 1px solid var(--cc-border); background: rgba(14, 17, 36, 0.45); transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease; }
-.go-act:hover { border-color: var(--cc-orange); background: rgba(245, 116, 97, 0.08); }
-.go-act:active { transform: scale(0.99); }
-.go-act:focus-visible { outline: 2px solid var(--cc-orange); outline-offset: 2px; }
-.go-act[aria-disabled="true"] { cursor: progress; border-color: rgba(245, 116, 97, 0.5); }
-.go-act__icon { width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center; font-family: var(--cc-mono); font-size: 13px; font-weight: 600; color: #fff; background: linear-gradient(135deg, #cc4432, #a51050); }
-.go-act.is-heap .go-act__icon { background: linear-gradient(135deg, #cc4432, #cb1c42); }
-.go-act.is-gc .go-act__icon { background: linear-gradient(135deg, #0e8a7a, #0b6f66); }
-.go-act b { display: block; font-size: 15px; color: var(--cc-text); }
-.go-act small { display: block; margin-top: 2px; font-size: 12.5px; color: var(--cc-muted); }
-.go-act__state { font-family: var(--cc-mono); font-size: 12px; color: var(--cc-orange); min-width: 3ch; text-align: right; }
-.go-toast { min-height: 20px; margin: 0; padding: 0 16px 12px; font-size: 13px; color: var(--go-ok); }
-.go-toast.is-busy { color: var(--cc-orange); }
-.go-config { list-style: none; margin: 0; padding: 14px 16px; display: grid; gap: 8px; border-top: 1px dashed var(--cc-border); font-family: var(--cc-mono); font-size: 12.5px; }
-.go-config li { display: flex; justify-content: space-between; gap: 12px; }
-.go-config span { color: var(--cc-orange); }
-.go-config b { font-weight: 500; color: var(--cc-text); text-align: right; overflow-wrap: anywhere; }
-.go-config b.is-empty, .go-vars dd.is-empty { color: var(--cc-muted); }
-.go-vars { margin: 0; padding: 14px 16px 16px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 16px; border-top: 1px dashed var(--cc-border); }
-.go-vars dt { font-size: 11.5px; color: var(--cc-muted); }
-.go-vars dd { margin: 2px 0 0; font-family: var(--cc-mono); font-size: 12.5px; color: var(--cc-text); overflow-wrap: anywhere; }
-
-/* Certification Clever Cloud Academy */
-.go-cert { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: clamp(20px, 4vw, 48px); align-items: center; margin: 8px 0 64px; scroll-margin-top: 90px; padding: clamp(24px, 4vw, 44px); border-radius: 24px; overflow: hidden; background: radial-gradient(120% 140% at 0% 0%, rgba(245, 116, 97, 0.22), transparent 55%), radial-gradient(100% 120% at 100% 100%, rgba(165, 16, 80, 0.3), transparent 60%), var(--cc-surface); border: 1px solid rgba(245, 116, 97, 0.4); }
-.go-cert .cc-cert__badge { width: clamp(132px, 18vw, 200px); height: auto; filter: drop-shadow(0 18px 40px rgba(203, 28, 66, 0.45)); animation: go-spin 40s linear infinite; }
-@keyframes go-spin { to { transform: rotate(360deg); } }
-.go-cert h2 { margin: 0; font-size: clamp(26px, 3.4vw, 40px); font-weight: 800; letter-spacing: -0.03em; line-height: 1.05; }
-.go-cert__lead { margin: 12px 0 22px; color: var(--cc-text-2); font-size: 16px; line-height: 1.6; max-width: 56ch; }
-.go-cert__tracks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 22px; }
-.go-cert__tracks a { display: block; padding: 14px 16px; border-radius: 14px; background: rgba(14, 17, 36, 0.55); border: 1px solid var(--cc-border); color: inherit; transition: border-color 0.15s ease, transform 0.15s ease; }
-.go-cert__tracks a:hover { border-color: var(--cc-orange); transform: translateY(-2px); }
-.go-cert__tracks b { display: block; color: var(--cc-text); font-size: 15px; }
-.go-cert__tracks span { display: block; margin-top: 4px; font-size: 13px; color: var(--cc-muted); }
-.go-cert__cta { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 18px; }
-.go-cert__cta small { color: var(--cc-muted); font-size: 13px; }
-
-/* Du git push au binaire */
-.go-build { margin-bottom: 72px; }
-.go-build h2 { margin: 0 0 6px; font-size: clamp(22px, 2.6vw, 30px); font-weight: 800; letter-spacing: -0.02em; }
-.go-build > p { margin: 0 0 22px; color: var(--cc-muted); max-width: 70ch; }
-.go-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; }
-.go-steps li { position: relative; padding: 18px 18px 0 0; border-top: 2px solid var(--cc-border); }
-.go-steps li::before { content: ""; position: absolute; top: -7px; left: 0; width: 12px; height: 12px; border-radius: 50%; background: var(--cc-orange); box-shadow: 0 0 0 4px var(--cc-bg); }
-.go-steps code { display: block; font-family: var(--cc-mono); font-size: 13.5px; color: var(--cc-text); overflow-wrap: anywhere; }
-.go-steps li > span { display: block; margin-top: 6px; font-size: 13.5px; color: var(--cc-muted); line-height: 1.5; }
-
-@media (max-width: 1080px) {
-  .go-pulse { grid-template-columns: 1fr; }
-}
-@media (max-width: 900px) {
-  .cc-topbar__inner { flex-wrap: wrap; row-gap: 8px; padding-block: 10px; }
-  .cc-topbar__spacer { display: none; }
-  .cc-topbar__nav { width: 100%; flex-wrap: wrap; }
-  .cc-topbar__nav .cc-hide-sm { display: none !important; }
-  .go-cert { grid-template-columns: 1fr; justify-items: start; }
-  .go-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 24px; }
-}
-@media (max-width: 640px) {
-  .go-figures { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .go-figures div:nth-child(n) { padding-left: 14px; border-left: 1px solid var(--cc-border); }
-  .go-figures div:nth-child(odd) { padding-left: 0; border-left: 0; }
-  .go-cert__tracks, .go-steps, .go-vars { grid-template-columns: 1fr; }
-  .go-announce .cc-container { flex-wrap: wrap; gap: 6px 12px; }
-}
-@media (prefers-reduced-motion: reduce) {
-  html { scroll-behavior: auto; }
-  .go-cert .cc-cert__badge { animation: none; }
-  .go-scope__alert, .go-figures dd, .go-act { transition: none; }
-}
-</style>
+<title>L'aquarium du runtime Go · Démo Clever Cloud</title>
 </head>
 <body>
 
@@ -200,106 +62,119 @@ main { flex: 1; }
   </div>
 </header>
 {{with .Demo.Announcement}}
-<div class="go-announce" role="status"><div class="cc-container"><code>ANNOUNCEMENT</code><span>{{.}}</span></div></div>
+<div class="go-announce" role="status"><div class="cc-container"><span class="go-announce__tag">Avis aux visiteurs</span><code>ANNOUNCEMENT</code><span>{{.}}</span></div></div>
 {{end}}
-<main>
+<main class="aq-hall">
 <div class="cc-container">
-  <section class="go-pulse" aria-labelledby="pulse-title" data-alert-mb="{{.Demo.HeapAlertMB}}">
-    <div class="cc-reveal" style="--i:0">
-      <h1 id="pulse-title" class="go-title"><b id="v-g">{{.Now.Goroutines}}</b> goroutines<br>en ce moment.</h1>
-      <p class="go-sub" aria-live="off">
-        <span>heap <b id="v-heap-sub">{{printf "%.2f" .Now.HeapMB}}</b> MB</span>
-        <span>GC n° <b id="v-gc-sub">{{.Now.GCText}}</b></span>
-        <span>up <b id="v-uptime">{{.Uptime}}</b></span>
-        <span>{{.Arch}}</span>
-      </p>
-      <p class="go-lead">Le processus Go qui vous répond, mesuré chaque seconde par la bibliothèque standard. Clever Cloud l'a compilé depuis <span class="cc-kbd">go.mod</span> au dernier <span class="cc-kbd">git push</span>, sans Dockerfile.</p>
-      <div class="go-cta">
-        <a class="cc-btn cc-btn--gradient" href="#desk-title">Faire réagir le runtime</a>
-        <a class="cc-btn" href="#cert-title">Se certifier Clever Cloud ↓</a>
-      </div>
-
-      <div class="go-scope" role="img" aria-label="Goroutines et heap sur les 90 dernières secondes">
-        <svg viewBox="0 0 900 260" preserveAspectRatio="none" aria-hidden="true">
-          <defs>
-            <linearGradient id="goHeapFill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stop-color="#f57461" stop-opacity="0.42"/><stop offset="0.6" stop-color="#cb1c42" stop-opacity="0.16"/><stop offset="1" stop-color="#a51050" stop-opacity="0"/>
-            </linearGradient>
-          </defs>
-          <path class="heap-area" id="p-heap-area" d=""/>
-          <path class="heap-line" id="p-heap" d=""/>
-          <line class="alert-line" id="l-alert" x1="0" x2="900" y1="0" y2="0"/>
-          <path class="gc-tick" id="p-gc" d=""/>
-          <path class="g-line" id="p-g" d=""/>
-        </svg>
-        <span class="go-scope__axis is-left" id="ax-heap">— MB</span>
-        <span class="go-scope__axis is-right" id="ax-g">— goroutines</span>
-        <span class="go-scope__alert" id="lbl-alert">HEAP_ALERT_MB · {{.Demo.HeapAlertMB}} MB</span>
-      </div>
-      <div class="go-legend">
-        <span class="is-g">goroutines</span><span class="is-h">heap (MB)</span><span class="is-gc">cycle de GC</span>
-        <em class="go-over" id="over" hidden>Heap au-dessus de {{.Demo.HeapAlertMB}} MB</em>
-        <span class="go-legend__span">90 s · 1 mesure/s</span>
-      </div>
-
-      <dl class="go-figures">
-        <div><dt>Heap</dt><dd id="v-heap">{{printf "%.2f" .Now.HeapMB}}<small>MB</small></dd></div>
-        <div><dt>Cycles de GC</dt><dd id="v-gc">{{.Now.GCText}}</dd></div>
-        <div><dt>Pause GC</dt><dd id="v-pause">{{.Now.PauseText}}</dd></div>
-        <div><dt>GOMAXPROCS</dt><dd>{{.MaxProcs}}<small>vCPU</small></dd></div>
-        <div><dt>Pages servies</dt><dd id="v-req">—</dd></div>
-        <div><dt>Go</dt><dd>{{.GoVer}}</dd></div>
-      </dl>
+  <section class="aq-scene" aria-labelledby="scene-title" data-alert-mb="{{.Demo.HeapAlertMB}}" data-burst-mb="{{.HeapBurstMB}}">
+    <div class="aq-intro cc-reveal" style="--i:0">
+      <h1 id="scene-title" class="aq-title"><span class="aq-title__n" id="v-g">{{.Now.Goroutines}}</span> goroutines nagent en ce moment.</h1>
+      <p class="aq-lead">Un poisson par goroutine du processus Go qui vous répond. L'eau monte avec le tas, la pompe du GC la fait redescendre, chaque pause remonte en bulle. Mesuré chaque seconde par la bibliothèque standard, dans un binaire compilé par Clever Cloud depuis <span class="cc-kbd">go.mod</span>. <a href="#cert-title">Devenir soigneur certifié ↓</a></p>
     </div>
 
-    <aside class="go-desk cc-reveal" style="--i:1" aria-labelledby="desk-title">
-      <div class="go-desk__bar"><span>{{with .CC.AppName}}{{.}}{{else}}demo-go{{end}}</span><span class="go-env{{if .Demo.IsProduction}} is-production{{end}}">{{.Demo.Env}}</span></div>
-      <h2 id="desk-title">Faire réagir le runtime</h2>
-      <p class="go-desk__hint">Charge bornée : une rafale à la fois, effacée en quelques secondes.</p>
-      <div class="go-actions">
-        <button class="go-act" type="button" data-load="goroutines"><span class="go-act__icon" aria-hidden="true">go</span><span><b>Lancer {{.Demo.Burst}} goroutines</b><small>chacune dort de 4 à 12 s</small></span><span class="go-act__state" data-state="goroutines"></span></button>
-        <button class="go-act is-heap" type="button" data-load="heap"><span class="go-act__icon" aria-hidden="true">MB</span><span><b>Allouer {{.HeapBurstMB}} MB</b><small>tenus 8 s, puis libérés par le GC</small></span><span class="go-act__state" data-state="heap"></span></button>
-        <button class="go-act is-gc" type="button" data-load="gc"><span class="go-act__icon" aria-hidden="true">GC</span><span><b>Forcer un GC</b><small><span class="go-mono">runtime.GC()</span>, au plus un toutes les 2 s</small></span><span class="go-act__state" data-state="gc"></span></button>
+    <div class="aq-aquarium cc-reveal" style="--i:1">
+      <div class="aq-hood">
+        <span class="aq-hood__plate">Bassin <b>{{with .CC.AppName}}{{.}}{{else}}demo-go{{end}}</b></span>
+        <span class="go-env{{if .Demo.IsProduction}} is-production{{end}}" title="APP_ENV">{{.Demo.Env}}</span>
+        <span class="aq-hood__key">1 poisson = 1 goroutine</span>
       </div>
-      <p class="go-toast" id="toast" role="status" aria-live="polite"></p>
-      <ul class="go-config" aria-label="Variables d'environnement de démo lues par l'application">
-        <li><span>APP_ENV</span><b>{{.Demo.Env}}</b></li>
-        <li><span>BURST_GOROUTINES</span><b>{{.Demo.Burst}}</b></li>
-        <li><span>HEAP_ALERT_MB</span><b>{{.Demo.HeapAlertMB}}</b></li>
-        <li><span>ANNOUNCEMENT</span>{{if .Demo.Announcement}}<b>définie</b>{{else}}<b class="is-empty">non définie</b>{{end}}</li>
-      </ul>
-      <dl class="go-vars" aria-label="Variables injectées par Clever Cloud">
-        <div><dt>Instance</dt>{{with .CC.Instance}}<dd>{{.}}</dd>{{else}}<dd class="is-empty">injecté au déploiement</dd>{{end}}</div>
-        <div><dt>Type d'instance</dt>{{with .CC.InstanceType}}<dd>{{.}}</dd>{{else}}<dd class="is-empty">injecté au déploiement</dd>{{end}}</div>
-        <div><dt>Commit déployé</dt>{{with .CC.Commit}}<dd>{{.}}</dd>{{else}}<dd class="is-empty">{{if $.CC.Live}}aucun (clever restart){{else}}injecté au déploiement{{end}}</dd>{{end}}</div>
-        <div><dt>Déploiement</dt>{{with .CC.Deployment}}<dd>{{.}}</dd>{{else}}<dd class="is-empty">injecté au déploiement</dd>{{end}}</div>
-      </dl>
-    </aside>
+      <div class="aq-tank" role="img" aria-label="Aquarium du runtime : un poisson par goroutine, l'eau au niveau du tas, une ligne rouge à HEAP_ALERT_MB = {{.Demo.HeapAlertMB}} MB, la pompe du GC à droite.">
+        <canvas id="tank" aria-hidden="true"></canvas>
+        <em class="aq-over" id="over" hidden>Heap au-dessus de {{.Demo.HeapAlertMB}} MB</em>
+      </div>
+
+      <div class="aq-stand">
+        <div class="aq-plaque">
+          <h2>Relevé du bassin</h2>
+          <dl>
+            <div class="aq-read"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12c3-4.5 9-5.5 13 0-4 5.5-10 4.5-13 0Z M16 12l5-3.5v7Z" fill="currentColor"/></svg><dt>Poissons<small>goroutines</small></dt><dd id="r-g">{{.Now.Goroutines}}</dd></div>
+            <div class="aq-read"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 9c2.5-2 4.5-2 7 0s4.5 2 7 0 4.5-2 6 0M2 14c2.5-2 4.5-2 7 0s4.5 2 7 0 4.5-2 6 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M2 19h20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><dt>Niveau de l'eau<small>tas (heap)</small></dt><dd id="r-heap">{{printf "%.2f" .Now.HeapMB}}<small>MB</small></dd></div>
+            <div class="aq-read"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 12 12 4.5M12 12l6.5 3.8M12 12l-6.5 3.8" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg><dt>Passages de la pompe<small>cycles de GC</small></dt><dd id="r-gc">{{.Now.GCText}}</dd></div>
+            <div class="aq-read"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="13" r="6" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="18" cy="6" r="2.6" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M7.5 11a3 3 0 0 1 2.5-1.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" fill="none"/></svg><dt>Dernière bulle<small>pause de GC</small></dt><dd id="r-pause">{{.Now.PauseText}}</dd></div>
+          </dl>
+          <p class="aq-plaque__foot">Go <b>{{.GoVer}}</b> sur {{.Arch}}, <b>{{.MaxProcs}}</b> vCPU (GOMAXPROCS), en service depuis <b id="v-uptime">{{.Uptime}}</b>, <b id="v-req">—</b> pages servies.</p>
+        </div>
+
+        <div class="aq-desk" aria-labelledby="desk-title">
+          <h2 id="desk-title">Pupitre du soigneur</h2>
+          <p class="aq-desk__hint">Charge bornée : une action à la fois, effacée en quelques secondes.</p>
+          <div class="aq-actions">
+            <button class="aq-btn" type="button" data-load="goroutines"><span class="aq-btn__cap" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 12c3-4.5 9-5.5 13 0-4 5.5-10 4.5-13 0Z M16 12l5-3.5v7Z" fill="currentColor"/></svg></span><span><b>Lâcher un banc de {{.Demo.Burst}}</b><small>goroutines qui nagent de 4 à 12 s</small></span><span class="aq-btn__state" data-state="goroutines"></span></button>
+            <button class="aq-btn is-heap" type="button" data-load="heap"><span class="aq-btn__cap" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3c3.5 4.6 6 8 6 11a6 6 0 0 1-12 0c0-3 2.5-6.4 6-11Z" fill="currentColor"/></svg></span><span><b>Verser {{.HeapBurstMB}} MB dans le tas</b><small>tenus 8 s, puis vidangés par le GC</small></span><span class="aq-btn__state" data-state="heap"></span></button>
+            <button class="aq-btn is-gc" type="button" data-load="gc"><span class="aq-btn__cap" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.4" fill="currentColor"/><path d="M12 9.6C11 6 12.5 3.5 15.5 3.5c-.5 3-1.6 4.8-3.5 6.1ZM14.1 13.2c3.6-1 6.1.5 6.1 3.5-3 .4-4.8-.6-6.1-3.5ZM9.9 13.2c-.9 3.6-3.4 5-6.1 3.6 1-2.9 2.8-4 6.1-3.6Z" fill="currentColor"/></svg></span><span><b>Lancer la pompe GC</b><small><code>runtime.GC()</code>, une fois par 2 s au plus</small></span><span class="aq-btn__state" data-state="gc"></span></button>
+          </div>
+          <p class="aq-toast" id="toast" role="status" aria-live="polite"></p>
+        </div>
+
+        <figure class="aq-log">
+          <figcaption>Les 90 dernières secondes<small>Une mesure par seconde, servie par <code>/stats</code></small></figcaption>
+          <div class="aq-log__plot" role="img" aria-label="Goroutines et tas sur les 90 dernières secondes">
+            <svg viewBox="0 0 360 140" preserveAspectRatio="none" aria-hidden="true">
+              <path class="heap-area" id="p-heap-area" d=""/>
+              <path class="heap-line" id="p-heap" d=""/>
+              <line class="alert-line" id="l-alert" x1="0" x2="360" y1="0" y2="0"/>
+              <path class="gc-tick" id="p-gc" d=""/>
+              <path class="g-line" id="p-g" d=""/>
+            </svg>
+            <span class="aq-log__axis is-left" id="ax-heap">— MB</span>
+            <span class="aq-log__axis is-right" id="ax-g">— goroutines</span>
+          </div>
+          <p class="aq-log__key"><span class="is-g">goroutines</span><span class="is-h">tas (MB)</span><span class="is-gc">cycle de GC</span></p>
+        </figure>
+      </div>
+    </div>
   </section>
 
-  <section class="go-cert" aria-labelledby="cert-title">
+  <section class="aq-tags" aria-label="Configuration du bassin">
+    <div class="aq-tag">
+      <div class="aq-tag__head"><h2>Réglages du bassin</h2></div>
+      <p>Variables de démo, lues au démarrage depuis la console Clever Cloud.</p>
+      <ul class="aq-vars">
+        <li><code>APP_ENV</code><b>{{.Demo.Env}}</b></li>
+        <li><code>BURST_GOROUTINES</code><b>{{.Demo.Burst}}</b></li>
+        <li><code>HEAP_ALERT_MB</code><b>{{.Demo.HeapAlertMB}}</b></li>
+        <li><code>ANNOUNCEMENT</code>{{if .Demo.Announcement}}<b>définie</b>{{else}}<b class="is-empty">non définie</b>{{end}}</li>
+      </ul>
+    </div>
+    <div class="aq-tag">
+      <div class="aq-tag__head"><h2>Running on Clever Cloud</h2>{{if .CC.Live}}<span class="cc-pill cc-pill--live"><span class="cc-dot"></span>Live</span>{{else}}<span class="cc-pill cc-pill--muted"><span class="cc-dot cc-dot--muted"></span>Local</span>{{end}}</div>
+      <p>Variables injectées par la plateforme sur chaque instance.</p>
+      <dl class="aq-cc">
+        <div><dt>Application</dt>{{with .CC.AppName}}<dd>{{.}}</dd>{{else}}<dd class="is-empty">injecté au déploiement</dd>{{end}}</div>
+        <div><dt>APP_ID</dt>{{with .CC.AppID}}<dd>{{.}}</dd>{{else}}<dd class="is-empty">injecté au déploiement</dd>{{end}}</div>
+        <div><dt>Instance</dt>{{with .CC.Instance}}<dd>{{.}}</dd>{{else}}<dd class="is-empty">injecté au déploiement</dd>{{end}}</div>
+        <div><dt>Type d'instance</dt>{{with .CC.InstanceType}}<dd>{{.}}</dd>{{else}}<dd class="is-empty">injecté au déploiement</dd>{{end}}</div>
+        <div><dt>Commit déployé</dt>{{with .CC.Commit}}<dd>{{.}}</dd>{{else}}<dd class="is-empty">{{if $.CC.Live}}non renseigné{{else}}injecté au déploiement{{end}}</dd>{{end}}</div>
+        <div><dt>Déploiement</dt>{{with .CC.Deployment}}<dd>{{.}}</dd>{{else}}<dd class="is-empty">injecté au déploiement</dd>{{end}}</div>
+      </dl>
+    </div>
+  </section>
+
+  <section class="aq-cert" aria-labelledby="cert-title">
+    <div class="aq-porthole"><div class="aq-porthole__glass">
 {{template "cc-badge"}}
+    </div></div>
     <div>
       <h2 id="cert-title">Cette app tourne sur Clever Cloud. Vous aussi, certifiez-vous.</h2>
-      <p class="go-cert__lead">Deux parcours officiels de la Clever Cloud Academy, gratuits et en ligne. À la clé : un badge vérifiable à afficher sur LinkedIn.</p>
-      <div class="go-cert__tracks">
+      <p class="aq-cert__lead">Le brevet de soigneur, version cloud : deux parcours officiels de la Clever Cloud Academy, gratuits et en ligne. À la clé, un badge vérifiable à afficher sur LinkedIn.</p>
+      <div class="aq-cert__tracks">
         <a href="https://academy.clever.cloud/course/view.php?id=2" target="_blank" rel="noopener"><b>Cloud Computing Fundamentals</b><span>Concepts, architectures, IaaS, PaaS et FaaS.</span></a>
         <a href="https://academy.clever.cloud/course/section.php?id=18" target="_blank" rel="noopener"><b>Advanced Deployment</b><span>Déployer, scaler et opérer une app comme celle-ci.</span></a>
       </div>
-      <div class="go-cert__cta">
+      <div class="aq-cert__cta">
         <a class="cc-btn cc-btn--gradient" href="https://academy.clever.cloud/" target="_blank" rel="noopener">Passer la certification</a>
         <small>academy.clever.cloud</small>
       </div>
     </div>
   </section>
 
-  <section class="go-build" aria-labelledby="build-title">
-    <h2 id="build-title">Du git push au binaire</h2>
-    <p>Ce que la plateforme a fait pour servir cette page. Aucune dépendance externe : le build ne télécharge rien.</p>
-    <ol class="go-steps">
-      <li><code>git push clever main</code><span>Runtime Go détecté, version lue dans <span class="go-mono">go.mod</span></span></li>
-      <li><code>go install github.com/Vitiosum/demo-go</code><span>Méthode <span class="go-mono">gomod</span>, page et CSS embarqués par <span class="go-mono">embed</span></span></li>
-      <li><code>$GOPATH/bin/demo-go</code><span>Binaire lancé, écoute sur <span class="go-mono">0.0.0.0:8080</span></span></li>
+  <section class="aq-build" aria-labelledby="build-title">
+    <h2 id="build-title">Comment le bassin a été rempli</h2>
+    <p>Ce que Clever Cloud a fait pour servir cette page. Aucune dépendance externe : le build ne télécharge rien.</p>
+    <ol class="aq-pipe">
+      <li><code>clever deploy</code><span>Runtime Go détecté, version lue dans <code>go.mod</code></span></li>
+      <li><code>go install github.com/Vitiosum/demo-go</code><span>Méthode <code>gomod</code>, page, styles et scripts embarqués par <code>embed</code></span></li>
+      <li><code>$GOPATH/bin/demo-go</code><span>Binaire lancé, écoute sur <code>0.0.0.0:8080</code></span></li>
       <li><code>GET /health → 200</code><span>Trafic basculé ; SIGTERM à l'arrêt, requêtes terminées</span></li>
     </ol>
   </section>
@@ -335,6 +210,7 @@ main { flex: 1; }
   </div>
 </footer>
 
+<script src="/aquarium.js"></script>
 <script src="/app.js"></script>
 </body>
 </html>

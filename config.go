@@ -75,8 +75,8 @@ func cut(s string, n int) string {
 }
 
 // firstEnv returns the first non-empty value among the given variable names.
-// The deployed-commit variable is only populated when the deployment carries a
-// commit (git push); a `clever restart` has none, and the page says so.
+// The deployed-commit variable is set by `clever deploy` and survives a
+// `clever restart` (checked on this app, demo-go, on 2026-11-04).
 func firstEnv(getenv func(string) string, keys ...string) string {
 	for _, k := range keys {
 		if v := getenv(k); v != "" {

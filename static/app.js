@@ -1,8 +1,11 @@
-// Oscilloscope and load buttons. External file so the page keeps a strict CSP (script-src 'self').
+// Relevé du bassin : polling de /stats, plaque en laiton, pupitre (3 charges bornées), courbe des 90 dernières secondes.
+// Le bassin lui-même est dessiné par aquarium.js. Fichier séparé : CSP stricte (script-src 'self').
 (function () {
-  var W = 900, H = 260, SPAN = 90; // viewBox width/height, seconds shown
-  var root = document.querySelector('.go-pulse');
+  'use strict';
+  var W = 360, H = 140, SPAN = 90; // viewBox de la courbe, secondes affichées
+  var root = document.querySelector('.aq-scene');
   var alertMB = Number(root && root.dataset.alertMb) || 32;
+  var burstMB = Number(root && root.dataset.burstMb) || 64;
   var samples = [];
   var baseUptime = 0, lastFetch = Date.now(), online = true;
 
@@ -14,10 +17,25 @@
     if (sec < 3600) return Math.floor(sec / 60) + 'm ' + String(sec % 60).padStart(2, '0') + 's';
     return Math.floor(sec / 3600) + 'h ' + String(Math.floor((sec % 3600) / 60)).padStart(2, '0') + 'm';
   }
+  function fmtPause(us) { return !us ? '—' : us >= 1000 ? (us / 1000).toFixed(1) + ' ms' : Math.round(us) + ' µs'; }
 
-  function nice(v) { // round an axis maximum up to 1, 2 or 5 × 10^n
+  // Arrondit vers le haut à une graduation lisible : 1, 1.2, 1.5, 2, 2.5, 3, 4, 5, 6, 8 × 10^n.
+  var STEPS = [1, 1.2, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10];
+  function niceUp(v) {
+    var p = Math.pow(10, Math.floor(Math.log10(v)));
+    for (var i = 0; i < STEPS.length; i++) if (STEPS[i] * p >= v - 1e-9) return STEPS[i] * p;
+    return 10 * p;
+  }
+  function niceG(v) {
     var p = Math.pow(10, Math.floor(Math.log10(v))), m = v / p;
     return (m <= 1 ? 1 : m <= 2 ? 2 : m <= 5 ? 5 : 10) * p;
+  }
+
+  // Échelle du bassin, stable : de quoi loger le seuil HEAP_ALERT_MB et l'allocation du pupitre.
+  function heapScale() {
+    var peak = 0;
+    samples.forEach(function (s) { peak = Math.max(peak, s.h); });
+    return niceUp(Math.max(alertMB * 1.25, burstMB * 1.15, peak * 1.1, 4));
   }
 
   function add(list) {
@@ -26,31 +44,30 @@
     if (samples.length > SPAN) samples = samples.slice(samples.length - SPAN);
   }
 
-  function draw() {
+  function drawLog(hMax) {
     if (!samples.length) return;
     var now = samples[samples.length - 1].t;
     var x = function (t) { return W - ((now - t) / 1000) * (W / (SPAN - 1)); };
-    var gMax = 10, hMax = 0;
-    samples.forEach(function (s) { gMax = Math.max(gMax, s.g); hMax = Math.max(hMax, s.h); });
-    gMax = nice(gMax * 1.15); hMax = Math.max(hMax * 1.5, alertMB * 1.1);
-    var yg = function (v) { return H - 8 - (v / gMax) * (H - 40); };
-    var yh = function (v) { return H - (v / hMax) * (H - 32); };
+    var gMax = 10;
+    samples.forEach(function (s) { gMax = Math.max(gMax, s.g); });
+    gMax = niceG(gMax * 1.15);
+    var yg = function (v) { return H - 6 - (v / gMax) * (H - 28); };
+    var yh = function (v) { return H - (v / hMax) * (H - 24); };
     var g = '', h = '', gc = '';
     samples.forEach(function (s, i) {
       var cmd = i ? 'L' : 'M', px = x(s.t).toFixed(1);
       g += cmd + px + ' ' + yg(s.g).toFixed(1);
       h += cmd + px + ' ' + yh(s.h).toFixed(1);
-      if (i && s.gc > samples[i - 1].gc) gc += 'M' + px + ' ' + (H - 22) + 'V' + H;
+      if (i && s.gc > samples[i - 1].gc) gc += 'M' + px + ' ' + (H - 16) + 'V' + H;
     });
     var x0 = x(samples[0].t).toFixed(1);
     $('p-g').setAttribute('d', g);
     $('p-heap').setAttribute('d', h);
     $('p-heap-area').setAttribute('d', h + 'L' + W + ' ' + H + 'L' + x0 + ' ' + H + 'Z');
     $('p-gc').setAttribute('d', gc);
-    var ya = yh(alertMB);
+    var ya = yh(alertMB).toFixed(1);
     $('l-alert').setAttribute('y1', ya); $('l-alert').setAttribute('y2', ya);
-    $('lbl-alert').style.top = (ya / H * 100) + '%';
-    $('ax-heap').textContent = 'max ' + Math.round(hMax) + ' MB';
+    $('ax-heap').textContent = 'max ' + hMax + ' MB';
     $('ax-g').textContent = 'max ' + gMax + ' goroutines';
   }
 
@@ -59,14 +76,13 @@
     baseUptime = d.uptime_sec; lastFetch = Date.now();
     $('v-uptime').textContent = fmtUptime(baseUptime);
     $('v-g').textContent = s.g;
-    $('v-heap-sub').textContent = s.h.toFixed(2);
-    $('v-gc-sub').textContent = s.gc ? s.gc : 'aucun';
-    text('v-heap', s.h.toFixed(2));
-    $('v-gc').textContent = s.gc ? s.gc : 'aucun';
-    $('v-pause').textContent = !s.p ? '—' : s.p >= 1000 ? (s.p / 1000).toFixed(1) + ' ms' : Math.round(s.p) + ' µs';
+    $('r-g').textContent = s.g;
+    text('r-heap', s.h.toFixed(2));
+    $('r-gc').textContent = s.gc ? s.gc : 'aucun';
+    $('r-pause').textContent = fmtPause(s.p);
     $('v-req').textContent = d.requests;
     var over = s.h > alertMB;
-    $('v-heap').classList.toggle('is-over', over);
+    $('r-heap').classList.toggle('is-over', over);
     $('over').hidden = !over;
     state('goroutines', d.burst_left_ms);
     state('heap', d.heap_left_ms);
@@ -84,10 +100,15 @@
     fetch('/stats' + (withHistory ? '?history=1' : ''), { cache: 'no-store' })
       .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
       .then(function (d) {
-        add(d.history || [d.now]); show(d); draw();
+        add(d.history || [d.now]);
+        show(d);
+        var hMax = heapScale();
+        drawLog(hMax);
+        var idle = Math.max(0, d.now.g - (d.now.b || 0)); // goroutines hors rafale : les poissons résidents
+        if (window.AquaTank) window.AquaTank.update(d.now, { alert: alertMB, scaleMax: hMax, idle: idle });
         if (!online) { online = true; toast('', false); }
       })
-      .catch(function () { online = false; toast('Hors ligne · nouvelle tentative', true); });
+      .catch(function () { online = false; toast('Hors ligne, nouvelle tentative…', true); });
   }
 
   var toastTimer;

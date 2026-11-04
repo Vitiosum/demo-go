@@ -1,28 +1,33 @@
-# The Runtime Oscilloscope — Go on Clever Cloud
+# The Runtime Aquarium — Go on Clever Cloud
 
-> The Go process that answers you, measured every second: goroutines, heap, GC cycles and pauses, drawn live on an oscilloscope over the last 90 seconds. Three bounded buttons make the runtime react on camera: 500 goroutines that sleep and fade away, 64 MB held for 8 seconds then collected, a forced GC. Standard library only, no add-on: the **Clever Cloud Go runtime** builds the module from `go.mod`, with no Dockerfile, and starts the binary. Dressed in the Clever Brand Kit.
+> The Go process that answers you, kept as a lit aquarium and measured every second. One fish per goroutine; the water level is the heap, rising toward the red line etched at `HEAP_ALERT_MB`; the GC is the filter pump on the side, and each GC pause rises as a bubble labelled in µs. A brass plate keeps the real figures, a recorder keeps the last 90 seconds, and the keeper's desk has three bounded buttons: release a school of 500 goroutines, pour 64 MB into the heap for 8 seconds, run the GC pump. Standard library only, no add-on: the **Clever Cloud Go runtime** builds the module from `go.mod`, with no Dockerfile, and starts the binary. Framed by the Clever Brand Kit, with the Clever Cloud Academy certification behind a porthole.
 
-![The dashboard run locally after two rounds of the buttons: 508 goroutines, 65 MB of heap above the HEAP_ALERT_MB line, GC ticks on the oscilloscope](docs/screenshot-desktop.png)
+![The aquarium run locally right after the three buttons: 511 goroutines as a school of coral fish around gold resident fish, the water at 64.8 MB above the HEAP_ALERT_MB line, GC pause bubbles labelled in µs beside the pump](docs/screenshot-desktop.png)
 
-<img src="docs/screenshot-phone.png" alt="The headline and the oscilloscope on a phone, run locally, with the heap above its threshold" width="300">
+<img src="docs/screenshot-phone.png" alt="The aquarium on a phone, run locally: the school of goroutines, the water above its red line, the GC pump and its bubbles" width="300">
 
 **Run it yourself.** The hosted demo was taken down after the presales review (November 2026). The steps in [Deploy on Clever Cloud](#deploy-on-clever-cloud) recreate it from scratch in about 3 minutes.
 
 ## What the Go runtime does here
 
-| Where | Feature | What you see |
+| In the aquarium | Runtime fact | Where it comes from |
 |---|---|---|
-| Build | Go runtime, `CC_GO_BUILD_TOOL=gomod`: `go install` of the module declared in `go.mod` | The section *Du git push au binaire* lists the four real steps. No dependency, so the build downloads nothing |
-| Start | The binary `$GOPATH/bin/demo-go` listens on `0.0.0.0:8080`; on SIGTERM (redeploy, scale-down) it finishes in-flight requests, 10 s max | `/health` answers 200, then traffic switches over |
-| Every second | One sampler goroutine: `runtime.NumGoroutine`, `runtime.ReadMemStats` (it stops the world, so it never runs per request), ring of 90 samples | The headline *N goroutines en ce moment.*, the oscilloscope (full as soon as the page opens), heap, GC cycles, last GC pause, `GOMAXPROCS` |
-| The control desk | Three bounded load generators (below) | A goroutine spike and its slope; a heap plateau over the dashed `HEAP_ALERT_MB` line, then the drop with a GC tick; the button counts down while a burst runs |
-| The control desk | Demo variables and platform variables | `APP_ENV` pill, `ANNOUNCEMENT` banner, burst size, threshold, instance, commit and deployment |
+| A fish | One goroutine, drawn 1 for 1 (up to 2500). Gold fish: the goroutines that are always there (HTTP server, sampler…); coral school: the goroutines of the current burst | `runtime.NumGoroutine`, and the burst counter `b` of each sample |
+| The water level | Heap in use, on a ruler in MB stuck on the glass; the ruler fits `HEAP_ALERT_MB` and the 64 MB pour | `MemStats.HeapAlloc` |
+| The red etched line | `HEAP_ALERT_MB`; once the water is above it, the line turns solid and *Heap au-dessus de N MB* appears | demo variable |
+| The pump and its sweep | A GC cycle: the rotor spins, a sweep crosses the tank, the counter on the pump moves on | `MemStats.NumGC` |
+| A bubble | One GC pause, sized and labelled by its duration (µs) | `MemStats.PauseNs` |
+| The brass plate and the recorder | Goroutines, heap, GC cycles, last pause, `GOMAXPROCS`, uptime; the last 90 samples, full as soon as the page opens | `GET /stats?history=1`, then one poll per second |
+| Build and start | `CC_GO_BUILD_TOOL=gomod`: `go install` of the module, then `$GOPATH/bin/demo-go` on `0.0.0.0:8080`; on SIGTERM (redeploy, scale-down) it finishes in-flight requests, 10 s max | The section *Comment le bassin a été rempli* lists the four real steps; no dependency, so the build downloads nothing |
+| The tags | Demo variables and the *Running on Clever Cloud* panel | `APP_ENV` pill on the tank hood, `ANNOUNCEMENT` notice, instance, commit and deployment |
 
-| Route | Effect | Bound |
-|---|---|---|
-| `POST /load/goroutines` | `BURST_GOROUTINES` goroutines, each sleeping 4 to 12 s | one burst at a time (max 2000), 429 otherwise |
-| `POST /load/heap` | 64 MB allocated (pages touched), held 8 s, released, then `runtime.GC()` | one allocation at a time, fixed size |
-| `POST /load/gc` | `runtime.GC()` | one per 2 s |
+The sampler is one goroutine: `runtime.ReadMemStats` stops the world, so it never runs per request.
+
+| Button on the keeper's desk | Route | Effect | Bound |
+|---|---|---|---|
+| *Lâcher un banc de 500* | `POST /load/goroutines` | `BURST_GOROUTINES` goroutines, each sleeping 4 to 12 s: a school is released at the surface, then thins out | one burst at a time (max 2000), 429 otherwise |
+| *Verser 64 MB dans le tas* | `POST /load/heap` | 64 MB allocated (pages touched), held 8 s, released, then `runtime.GC()`: the water rises, then the pump drains it | one allocation at a time, fixed size |
+| *Lancer la pompe GC* | `POST /load/gc` | `runtime.GC()`: the pump runs and a bubble rises | one per 2 s |
 
 Worst case: 2000 sleeping goroutines plus 64 MB. No CPU loop, nothing persistent.
 
@@ -56,19 +61,19 @@ No add-on, no setup script. Clever Cloud runs `go install` on the module and sta
 |---|---|---|
 | `CC_GO_BUILD_TOOL` | you | `gomod`: build the module from `go.mod` |
 | `CC_HEALTH_CHECK_PATH` | you | `/health` |
-| `APP_ENV` | optional, default `local` | Environment pill on the control desk (Clever gradient when `production`) |
-| `ANNOUNCEMENT` | optional, empty | Banner on top of the page when set (160 characters max) |
-| `BURST_GOROUTINES` | optional, default `500` (1 to 2000) | Size of the goroutine burst: button label and height of the spike |
-| `HEAP_ALERT_MB` | optional, default `32` (1 to 1024) | Dashed threshold on the chart; above it the Heap figure turns red and *Heap au-dessus de N MB* appears |
+| `APP_ENV` | optional, default `local` | Environment pill on the tank hood (Clever gradient when `production`) |
+| `ANNOUNCEMENT` | optional, empty | *Avis aux visiteurs* notice on top of the page when set (160 characters max) |
+| `BURST_GOROUTINES` | optional, default `500` (1 to 2000) | Size of the school: button label, number of coral fish, height of the spike on the recorder |
+| `HEAP_ALERT_MB` | optional, default `32` (1 to 1024) | Red line etched on the glass and on the recorder; above it the heap figure turns red and *Heap au-dessus de N MB* appears |
 | `PORT` | Clever Cloud | Listen port, `8080` when unset |
 
-Invalid or out-of-range values fall back to the default. To show it live: `clever env set HEAP_ALERT_MB 128`, `clever restart`, reload: the 64 MB allocation no longer crosses the threshold.
+Invalid or out-of-range values fall back to the default. To show it live: `clever env set HEAP_ALERT_MB 128`, `clever restart`, reload: the ruler goes up to 200 MB and the 64 MB pour stays below the line.
 
-The desk shows, read-only, `CC_APP_NAME`, `APP_ID` (switches the *Live on Clever Cloud* pill), `INSTANCE_NUMBER`, `CC_PRETTY_INSTANCE_NAME`, `INSTANCE_TYPE`, `COMMIT_ID`/`CC_COMMIT_ID` and `CC_DEPLOYMENT_ID`/`DEPLOYMENT_ID`; locally each one reads « injecté au déploiement ». The commit variable is set by `clever deploy` and stays set after a `clever restart` (checked on another demo); when it is empty on Clever Cloud, the desk says « aucun (clever restart) ».
+The *Running on Clever Cloud* tag shows, read-only, `CC_APP_NAME`, `APP_ID` (it also switches the *Live on Clever Cloud* pill), `INSTANCE_NUMBER`, `CC_PRETTY_INSTANCE_NAME`, `INSTANCE_TYPE`, `COMMIT_ID`/`CC_COMMIT_ID` (7 characters) and `CC_DEPLOYMENT_ID`/`DEPLOYMENT_ID`; locally each one reads « injecté au déploiement ». The commit variable is set by `clever deploy` and stays set after a `clever restart` (checked on demo-go itself, 2026-11-04); if it is ever empty on Clever Cloud, the tag reads « non renseigné ».
 
 ## Routes
 
-`GET /` (page) · `GET /stats` (latest sample, uptime, page count, burst state; `?history=1` adds the last 90 samples; the page polls it every second) · `GET /health` · `GET /cc-brand.css` · `GET /app.js` · the three `POST /load/*`. Other verbs → 405, other paths → 404. Security headers on every response, 404 and 405 included (strict CSP: no inline script).
+`GET /` (page) · `GET /stats` (latest sample `{t, g, b, h, gc, p}`: time, goroutines, burst goroutines still alive, heap MB, GC cycles, last pause µs; plus uptime, page count, burst state; `?history=1` adds the last 90 samples; the page polls it every second) · `GET /health` · `GET /cc-brand.css` · `GET /aquarium.css` · `GET /aquarium.js` · `GET /app.js` · the three `POST /load/*`. Other verbs → 405, other paths → 404. Security headers on every response, 404 and 405 included (strict CSP: no inline script).
 
 ## Code tour
 
@@ -76,9 +81,11 @@ The desk shows, read-only, `CC_APP_NAME`, `APP_ID` (switches the *Live on Clever
 main.go             HTTP server (timeouts, SIGTERM graceful shutdown), routes, CSP middleware, handlers
 pulse.go            runtime sampler (ring of 90 samples) and the bounded load generators
 config.go           demo variables (APP_ENV, ANNOUNCEMENT, BURST_GOROUTINES, HEAP_ALERT_MB) and CC_* platform variables
-main_test.go        httptest tests (routes, headers, demo variables, bounds)
+main_test.go        httptest tests (routes, headers, demo variables, bounds, certification block)
 static/index.html   page template (html/template), logo and badge SVG
-static/app.js       oscilloscope drawing, polling, buttons (separate file: strict CSP)
+static/aquarium.js  the tank on a <canvas>: fish, water, pump, bubbles (separate file: strict CSP)
+static/app.js       polling of /stats, brass plate, keeper's desk buttons, 90 s recorder
+static/aquarium.css styles of the aquarium (fonts: Plus Jakarta Sans, JetBrains Mono, Marcellus)
 static/cc-brand.css Clever Brand Kit, copied as-is (do not edit)
 clevercloud/go.json legacy file, deprecated by the doc (see above)
 ```
@@ -94,7 +101,7 @@ PORT=8104 APP_ENV=production ANNOUNCEMENT="Maintenance ce soir à 22 h" \
 gofmt -l . ; go vet ./... && go test -race ./...
 ```
 
-Requires Go 1.27+. The screenshots above come from `go run .` on a laptop (hence « Local · hors Clever Cloud » and `darwin/arm64`).
+Requires Go 1.27+. The screenshots above come from `go run .` on a laptop (hence « Local · hors Clever Cloud » and `darwin/arm64`), taken right after `curl -X POST` on the three `/load/*` routes. Under `prefers-reduced-motion`, the tank is drawn still and redrawn on each sample.
 
 ## License
 
